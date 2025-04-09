@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>태아 성장 비교 계산기</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&family=Nanum+Myeongjo&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: #cceeff;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: #ffffffcc;
+      border: 3px dashed #000;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+    select, button {
+      width: 90%;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 1rem;
+      border-radius: 12px;
+      border: 1px solid #aaa;
+    }
+    button {
+      background-color: #3399cc;
+      color: white;
+      border: none;
+      box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+      cursor: pointer;
+    }
+    #result {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>태아 성장 비교 계산기</h1>
+    <label for="weekSelect">임신 주차를 선택하세요:</label><br />
+    <select id="weekSelect">
+      <option value="">-- 선택 --</option>
+      <script>
+        for (let i = 6; i <= 39; i++) {
+          document.write(`<option value="${i}">${i}주</option>`);
+        }
+      </script>
+    </select>
+    <button onclick="showGrowth()">결과 보기</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const growthData = {
+      6: { weight: "0.1g", length: "0.4cm", crl: "0.3cm" },
+      7: { weight: "0.2g", length: "0.8cm", crl: "0.6cm" },
+      8: { weight: "0.5g", length: "1.6cm", crl: "1.2cm" },
+      9: { weight: "2g", length: "2.3cm", crl: "2.0cm" },
+      10: { weight: "4g", length: "3.1cm", crl: "3.0cm" },
+      11: { weight: "7g", length: "4.1cm", crl: "4.0cm" },
+      12: { weight: "14g", length: "5.4cm", crl: "5.4cm" },
+      13: { weight: "23g", length: "7.4cm", crl: "6.5cm" },
+      14: { weight: "43g", length: "8.7cm", crl: "7.6cm" },
+      15: { weight: "70g", length: "10.1cm", crl: "8.7cm" },
+      16: { weight: "100g", length: "11.6cm", crl: "9.8cm" },
+      17: { weight: "140g", length: "13.0cm", crl: "10.5cm" },
+      18: { weight: "190g", length: "14.2cm", crl: "11.2cm" },
+      19: { weight: "240g", length: "15.3cm", crl: "12.0cm" },
+      20: { weight: "300g", length: "25cm", crl: "13.0cm" },
+      21: { weight: "360g", length: "26.7cm", crl: "14.0cm" },
+      22: { weight: "430g", length: "27.8cm", crl: "15.0cm" },
+      23: { weight: "500g", length: "28.9cm", crl: "16.0cm" },
+      24: { weight: "600g", length: "30.0cm", crl: "17.0cm" },
+      25: { weight: "700g", length: "34.6cm", crl: "18.0cm" },
+      26: { weight: "800g", length: "35.6cm", crl: "19.0cm" },
+      27: { weight: "875g", length: "36.6cm", crl: "20.0cm" },
+      28: { weight: "1000g", length: "37.6cm", crl: "21.0cm" },
+      29: { weight: "1150g", length: "38.6cm", crl: "22.0cm" },
+      30: { weight: "1300g", length: "39.9cm", crl: "23.0cm" },
+      31: { weight: "1500g", length: "41.1cm", crl: "24.0cm" },
+      32: { weight: "1700g", length: "42.4cm", crl: "25.0cm" },
+      33: { weight: "1900g", length: "43.7cm", crl: "26.0cm" },
+      34: { weight: "2100g", length: "45.0cm", crl: "27.0cm" },
+      35: { weight: "2300g", length: "46.2cm", crl: "28.0cm" },
+      36: { weight: "2500g", length: "47.4cm", crl: "29.0cm" },
+      37: { weight: "2700g", length: "48.6cm", crl: "30.0cm" },
+      38: { weight: "2900g", length: "49.8cm", crl: "31.0cm" },
+      39: { weight: "3100g", length: "50.7cm", crl: "32.0cm" }
+    };
+
+    function showGrowth() {
+      const week = parseInt(document.getElementById("weekSelect").value);
+      const result = document.getElementById("result");
+
+      if (!week || !growthData[week]) {
+        result.innerText = "정확한 주차를 선택해주세요.";
+        return;
+      }
+
+      const data = growthData[week];
+      result.innerHTML = `
+        평균 무게: <strong>${data.weight}</strong><br>
+        평균 키 (머리~발끝): <strong>${data.length}</strong><br>
+        CRL (머리~둔부): <strong>${data.crl}</strong>
+      `;
+    }
+  </script>
+</body>
+</html>
