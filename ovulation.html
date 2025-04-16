@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>배란일 계산기</title>
+  <meta name="description" content="배란일 계산기는 마지막 생리 시작일과 월경 주기를 기준으로 가임기와 배란 예정일을 예측하는 도구입니다. 임신 가능일을 확인할 때 유용합니다.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&family=Nanum+Myeongjo&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: #ffe5b4;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .main-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      transition: margin-left 0.3s;
+    }
+
+    .container {
+      background: #ffffffcc;
+      border: 3px dashed black;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 450px;
+      width: 90%;
+      box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+
+    input, button, label {
+      display: block;
+      margin: 10px auto;
+      font-size: 1rem;
+      width: 90%;
+      max-width: 320px;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #aaa;
+    }
+
+    button {
+      background-color: #f57c00;
+      color: white;
+      border: none;
+      box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+      cursor: pointer;
+    }
+
+#result {
+  font-weight: bold;
+  font-size: 18px;
+  margin-top: 15px;
+  border: 2px dashed black;
+  border-radius: 10px;
+  padding: 15px;
+  background-color: #FFFFFF;
+}
+
+
+    .section {
+      margin-bottom: 30px;
+      border-top: 1px dashed #aaa;
+      padding-top: 20px;
+    }
+.description {
+  text-align: left;
+  margin-top: 30px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.description h2 {
+  font-family: 'Nanum Myeongjo', serif;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+    /* 메뉴 버튼 스타일 */
+    .menu-btn {
+      position: fixed;
+      left: 20px;
+      top: 20px;
+      background-color: #fcdcd3;
+      color: black;
+      border: 2px dashed black;
+      border-radius: 10px;
+      padding: 10px 15px;
+      cursor: pointer;
+      z-index: 1000;
+      width: auto;
+      font-size: 1rem;
+      font-weight: bold;
+    }
+
+    /* 사이드 메뉴 스타일 */
+    .side-menu {
+      position: fixed;
+      top: 0;
+      left: -300px;
+      width: 280px;
+      height: 100%;
+      background-color: #ffffff;
+      overflow-y: auto;
+      transition: left 0.3s;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+      z-index: 999;
+      text-align: left;
+      padding: 60px 10px 20px 10px;
+    }
+
+    .side-menu h2 {
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 1.2rem;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      padding-left: 10px;
+      border-bottom: 1px solid #fcdcd3;
+      padding-bottom: 5px;
+    }
+
+    .side-menu a {
+      display: block;
+      padding: 8px 10px;
+      text-decoration: none;
+      color: #333;
+      border-radius: 5px;
+    }
+
+    .side-menu a:hover {
+      background-color: #fcdcd3;
+    }
+
+    /* 메뉴가 열렸을 때 */
+    .menu-open .side-menu {
+      left: 0;
+    }
+
+    .menu-open .main-container {
+      margin-left: 280px;
+    }
+
+    /* 오버레이 스타일 */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.4);
+      display: none;
+      z-index: 998;
+    }
+
+    .menu-open .overlay {
+      display: block;
+    }
+
+    /* 모바일 대응 */
+    @media screen and (max-width: 768px) {
+      .menu-open .main-container {
+        margin-left: 0;
+      }
+      
+      .menu-btn {
+        top: 10px;
+        left: 10px;
+        padding: 8px 12px;
+      }
+    }
+.home-button {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  width: 42px;
+  height: 42px;
+  background-color: white;
+  border: 2px dashed black;
+  border-radius: 10px;
+  font-size: 1.3rem;
+  text-decoration: none;
+  color: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 1px 1px 4px rgba(0,0,0,0.1);
+  z-index: 1001;
+}
+
+@media screen and (max-width: 480px) {
+  .home-button {
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem;
+    top: 10px;
+    right: 10px;
+  }
+}
+
+  </style>
+</head>
+<body>
+<!-- 홈 버튼 -->
+<a href="index.html" class="home-button" title="홈으로">🏠</a>
+
+  <button class="menu-btn" onclick="toggleMenu()">메뉴</button>
+  
+  <div class="side-menu">
+    <h2>임신 관련 계산기</h2>
+    <a href="ovulation.html">배란일 계산기</a>
+    <a href="pregnancy.html">임신주수 · 분만예정일 계산기</a>
+    <a href="fetal_growth.html">태아 성장 비교 계산기</a>
+
+    <h2>수유 관련 계산기</h2>
+    <a href="feeding.html">수유량 계산기</a>
+    <a href="breastfeeding.html">모유수유량 계산기</a>
+  
+    <h2>아기 성장 및 발달</h2>
+    <a href="baby-anniversary.html">아기 기념일 계산기</a>
+    <a href="vaccine_schedule.html">예방접종 스케줄 계산기</a>
+    <a href="sleep-calculator.html">아기 수면 시간 계산기</a>
+    <a href="development-guide.htm">유아 발달 단계 안내기</a>
+
+    <h2>기타 건강 계산기</h2>
+    <a href="dday.html">D-Day 계산기</a>
+    <a href="water-intake.html">물 섭취량 계산기</a>
+    <a href="bmi.html">BMI 계산기</a>
+  </div>
+
+  <div class="overlay" onclick="toggleMenu()"></div>
+
+  <div class="main-container">
+  <div class="container">
+    <h1>배란일 계산기</h1>
+
+    <!-- 📌 방법 1: 월경 주기 입력 -->
+    <div>
+      <label>마지막 생리 시작일:</label>
+      <input type="date" id="lastPeriod">
+
+      <label>월경 주기 (일):</label>
+      <input type="number" id="cycleLength" placeholder="기본값: 28" value="28">
+
+      <button onclick="calculateOvulation()">배란일 계산</button>
+    </div>
+
+    <!-- 📌 방법 2: 주기를 모를 경우 -->
+    <div class="section">
+    <h1>주기를 모를 경우</h1>
+      <label>이전 생리 시작일①:</label>
+      <input type="date" id="prev1">
+
+      <label>최근 생리 시작일②:</label>
+      <input type="date" id="prev2">
+
+      <button onclick="calculateFromTwoPeriods()">주기 자동 계산 → 배란일 계산</button>
+    </div>
+
+    <div id="result"></div>
+<hr>
+<div class="description">
+  <h2>배란일 계산기란?</h2>
+  <p>
+    배란일 계산기는 생리 시작일과 월경 주기를 기준으로 배란이 일어나는 시점을 예측해주는 도구입니다.<br>
+    일반적으로 배란은 다음 생리 시작일의 약 14일 전에 일어납니다.<br>
+    배란일 전후 며칠은 임신 가능성이 가장 높은 가임기로 간주됩니다.<br><br>
+    주기를 모르는 경우에는 생리 시작일 간의 간격으로 주기를 추정하여 배란일을 계산할 수 있습니다.<br>
+    본 계산기는 참고용으로 사용하시고, 보다 정확한 계획은 의료 전문가와 상담하시기 바랍니다.
+  </p>
+</div>
+<p style="font-size: 0.85rem; text-align: center; margin-top: 40px;">
+  <a href="about.html">사이트 소개</a> |
+  <a href="contact.html">문의하기</a> |
+  <a href="privacy.html">개인정보처리방침</a>
+</p>
+
+  </div>
+
+  <script>
+    function calculateOvulation() {
+      const lastPeriod = document.getElementById('lastPeriod').value;
+      const cycle = parseInt(document.getElementById('cycleLength').value) || 28;
+      const result = document.getElementById('result');
+
+      if (!lastPeriod) {
+        result.innerText = "생리 시작일을 입력해주세요.";
+        return;
+      }
+
+      const ovulationDate = new Date(lastPeriod);
+      ovulationDate.setDate(ovulationDate.getDate() + cycle - 14);
+      const formatted = ovulationDate.toISOString().split("T")[0];
+
+      result.innerHTML = `예상 배란일: <strong>${formatted}</strong><br>(입력한 주기: ${cycle}일)`;
+    }
+
+    function calculateFromTwoPeriods() {
+      const p1 = document.getElementById('prev1').value;
+      const p2 = document.getElementById('prev2').value;
+      const result = document.getElementById('result');
+
+      if (!p1 || !p2) {
+        result.innerText = "두 생리 시작일을 모두 입력해주세요.";
+        return;
+      }
+
+      const date1 = new Date(p1);
+      const date2 = new Date(p2);
+      const cycle = Math.abs((date2 - date1) / (1000 * 60 * 60 * 24));
+
+      const ovulationDate = new Date(p2);
+      ovulationDate.setDate(ovulationDate.getDate() + cycle - 14);
+      const formatted = ovulationDate.toISOString().split("T")[0];
+
+      result.innerHTML = `예상 주기: <strong>${cycle}일</strong><br>예상 배란일: <strong>${formatted}</strong>`;
+    }
+
+    function toggleMenu() {
+      document.body.classList.toggle('menu-open');
+    }
+
+    // 페이지 로드 시 현재 페이지 링크 강조
+    document.addEventListener('DOMContentLoaded', function() {
+      const currentPage = window.location.pathname.split('/').pop();
+      const menuLinks = document.querySelectorAll('.side-menu a');
+      
+      menuLinks.forEach(link => {
+        if (link.getAttribute('href') === currentPage) {
+          link.style.fontWeight = 'bold';
+          link.style.backgroundColor = '#fcdcd3';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

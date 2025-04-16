@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>유아 발달 단계 안내기</title>
+  <meta name="description" content="유아 발달 단계 안내기는 생일을 기준으로 현재 개월 수에 맞는 성장 및 행동 발달 정보를 제공하는 도구입니다. 유아 발달 특성을 이해하는 데 유용합니다.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&family=Nanum+Myeongjo&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: #ffc9b9;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+
+    .main-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      transition: margin-left 0.3s;
+    }
+
+    .container {
+      background: #ffffffcc;
+      border: 3px dashed black;
+      border-radius: 20px;
+      padding: 30px;
+      width: 90%;
+      max-width: 480px;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 1.5rem;
+    }
+    input, button {
+      width: 90%;
+      max-width: 300px;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 10px;
+      border: 1px solid #aaa;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #f17f5b;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+#result {
+  font-weight: bold;
+  font-size: 18px;
+  margin-top: 15px;
+  border: 2px dashed black;
+  border-radius: 10px;
+  padding: 15px;
+  background-color: #ffffff;
+}
+
+
+.description {
+  text-align: left;
+  margin-top: 30px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.description h2 {
+  font-family: 'Nanum Myeongjo', serif;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+    /* 메뉴 버튼 스타일 */
+    .menu-btn {
+      position: fixed;
+      left: 20px;
+      top: 20px;
+      background-color: #fcdcd3;
+      color: black;
+      border: 2px dashed black;
+      border-radius: 10px;
+      padding: 10px 15px;
+      cursor: pointer;
+      z-index: 1000;
+      width: auto;
+      font-size: 1rem;
+      font-weight: bold;
+    }
+
+    /* 사이드 메뉴 스타일 */
+    .side-menu {
+      position: fixed;
+      top: 0;
+      left: -300px;
+      width: 280px;
+      height: 100%;
+      background-color: #ffffff;
+      overflow-y: auto;
+      transition: left 0.3s;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+      z-index: 999;
+      text-align: left;
+      padding: 60px 10px 20px 10px;
+    }
+
+    .side-menu h2 {
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 1.2rem;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      padding-left: 10px;
+      border-bottom: 1px solid #fcdcd3;
+      padding-bottom: 5px;
+    }
+
+    .side-menu a {
+      display: block;
+      padding: 8px 10px;
+      text-decoration: none;
+      color: #333;
+      border-radius: 5px;
+    }
+
+    .side-menu a:hover {
+      background-color: #fcdcd3;
+    }
+
+    /* 메뉴가 열렸을 때 */
+    .menu-open .side-menu {
+      left: 0;
+    }
+
+    .menu-open .main-container {
+      margin-left: 280px;
+    }
+
+    /* 오버레이 스타일 */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.4);
+      display: none;
+      z-index: 998;
+    }
+
+    .menu-open .overlay {
+      display: block;
+    }
+
+    /* 모바일 대응 */
+    @media screen and (max-width: 768px) {
+      .menu-open .main-container {
+        margin-left: 0;
+      }
+      
+      .menu-btn {
+        top: 10px;
+        left: 10px;
+        padding: 8px 12px;
+      }
+    }
+.home-button {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  width: 42px;
+  height: 42px;
+  background-color: white;
+  border: 2px dashed black;
+  border-radius: 10px;
+  font-size: 1.3rem;
+  text-decoration: none;
+  color: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 1px 1px 4px rgba(0,0,0,0.1);
+  z-index: 1001;
+}
+
+@media screen and (max-width: 480px) {
+  .home-button {
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem;
+    top: 10px;
+    right: 10px;
+  }
+}
+
+  </style>
+</head>
+<body>
+<!-- 홈 버튼 -->
+<a href="index.html" class="home-button" title="홈으로">🏠</a>
+
+  <button class="menu-btn" onclick="toggleMenu()">메뉴</button>
+  
+  <div class="side-menu">
+    <h2>임신 관련 계산기</h2>
+    <a href="ovulation.html">배란일 계산기</a>
+    <a href="pregnancy.html">임신주수 · 분만예정일 계산기</a>
+    <a href="fetal_growth.html">태아 성장 비교 계산기</a>
+
+    <h2>수유 관련 계산기</h2>
+    <a href="feeding.html">수유량 계산기</a>
+    <a href="breastfeeding.html">모유수유량 계산기</a>
+  
+    <h2>아기 성장 및 발달</h2>
+    <a href="baby-anniversary.html">아기 기념일 계산기</a>
+    <a href="vaccine_schedule.html">예방접종 스케줄 계산기</a>
+    <a href="sleep-calculator.html">아기 수면 시간 계산기</a>
+    <a href="development-guide.htm">유아 발달 단계 안내기</a>
+
+    <h2>기타 건강 계산기</h2>
+    <a href="dday.html">D-Day 계산기</a>
+    <a href="water-intake.html">물 섭취량 계산기</a>
+    <a href="bmi.html">BMI 계산기</a>
+  </div>
+
+  <div class="overlay" onclick="toggleMenu()"></div>
+
+  <div class="main-container">
+  <div class="container">
+    <h1>유아 발달 단계 안내기</h1>
+    <label for="birthday">아기 생일:</label>
+    <input type="date" id="birthday">
+    <button onclick="showDevelopment()">발달 단계 보기</button>
+    <div id="result"></div>
+<hr>
+<div class="description">
+  <h2>유아 발달 단계 안내기란?</h2>
+  <p>
+    유아 발달 단계 안내기는 아기의 생일을 기준으로 생후 개월 수를 계산하고,<br>
+    그에 따른 평균적인 발달 단계 정보를 알려주는 도구입니다.<br><br>
+    아기의 성장과 발달은 개별 차이가 크지만, 전반적인 발달 흐름을 이해하고<br>
+    적절한 자극과 돌봄을 제공하는 데 도움을 줄 수 있습니다.<br><br>
+    본 안내기는 참고용이며, 아기의 발달에 대한 자세한 상담은<br>
+    소아청소년과 전문의나 발달 전문가와 상의하시기 바랍니다.
+  </p>
+</div>
+<p style="font-size: 0.85rem; text-align: center; margin-top: 40px;">
+  <a href="about.html">사이트 소개</a> |
+  <a href="contact.html">문의하기</a> |
+  <a href="privacy.html">개인정보처리방침</a>
+</p>
+
+  </div>
+
+  <script>
+    const stages = [
+      { from: 0, to: 1, text: "신생아기: 감각 자극 반응, 울음으로 의사표현" },
+      { from: 2, to: 3, text: "2~3개월: 미소 반응, 머리 들기 시작" },
+      { from: 4, to: 6, text: "4~6개월: 뒤집기, 웃음소리, 장난감 탐색" },
+      { from: 7, to: 9, text: "7~9개월: 앉기, 옹알이, 낯가림" },
+      { from: 10, to: 12, text: "10~12개월: 기기, 붙잡고 서기, 엄마/아빠 말함" },
+      { from: 13, to: 18, text: "13~18개월: 걷기, 간단한 말 표현, 흉내내기" },
+      { from: 19, to: 24, text: "19~24개월: 간단한 문장 사용, 이름 인지, 공놀이" },
+      { from: 25, to: 36, text: "2~3세: 자기표현 증가, 기본 명령 이해, 그림 관심" },
+      { from: 37, to: 60, text: "3~5세: 문장 말하기, 상상 놀이, 친구와 상호작용" },
+      { from: 61, to: 72, text: "5~6세: 규칙 이해, 글자/숫자 인식, 독립심 증가" },
+      { from: 73, to: 999, text: "6세 이상: 초등학교 준비, 규칙적 생활 습관" }
+    ];
+
+    function showDevelopment() {
+      const birth = document.getElementById("birthday").value;
+      const result = document.getElementById("result");
+      result.innerHTML = "";
+
+      if (!birth) {
+        result.innerHTML = "<p>생일을 선택해주세요.</p>";
+        return;
+      }
+
+      const birthDate = new Date(birth);
+      const today = new Date();
+      let months = (today.getFullYear() - birthDate.getFullYear()) * 12 + (today.getMonth() - birthDate.getMonth());
+      if (today.getDate() < birthDate.getDate()) months--;
+
+      const stage = stages.find(s => months >= s.from && months <= s.to);
+      result.innerHTML = `현재 개월 수: <strong>${months}개월</strong><br>${stage ? stage.text : "정보 없음"}`;
+    }
+
+    function toggleMenu() {
+      document.body.classList.toggle('menu-open');
+    }
+
+    // 페이지 로드 시 현재 페이지 링크 강조
+    document.addEventListener('DOMContentLoaded', function() {
+      const currentPage = window.location.pathname.split('/').pop();
+      const menuLinks = document.querySelectorAll('.side-menu a');
+      
+      menuLinks.forEach(link => {
+        if (link.getAttribute('href') === currentPage) {
+          link.style.fontWeight = 'bold';
+          link.style.backgroundColor = '#fcdcd3';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
