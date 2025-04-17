@@ -1,4 +1,2 @@
-User-agent: *
-Disallow:
-
-Sitemap: https://parentscalc.com/sitemap.xml
+User-agent: Yeti
+Allow:/
