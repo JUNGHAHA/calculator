@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+  <title>ParensCalc - 육아 건강 계산기 모음</title>
+  <link>https://parentscalc.com</link>
+  <description>임신, 수유, 육아에 필요한 다양한 계산기를 제공합니다.</description>
+  <language>ko</language>
+  <lastBuildDate>Mon, 15 Apr 2024 13:00:00 +0900</lastBuildDate>
+
+  <item>
+    <title>배란일 계산기</title>
+    <link>https://parentscalc.com/ovulation.html</link>
+    <description>생리 주기를 기준으로 임신 가능일을 계산해주는 도구</description>
+    <pubDate>2024-04-10</pubDate>
+  </item>
+
+  <item>
+    <title>임신주수 · 분만예정일 계산기</title>
+    <link>https://parentscalc.com/pregnancy.html</link>
+    <description>마지막 생리일 기준으로 임신 주수와 분만 예정일을 계산</description>
+    <pubDate>2024-04-10</pubDate>
+  </item>
+
+  <item>
+    <title>태아 성장 비교 계산기</title>
+    <link>https://parentscalc.com/fetal_growth.html</link>
+    <description>주차별 태아의 평균 몸무게와 키를 비교</description>
+    <pubDate>2024-04-11</pubDate>
+  </item>
+
+  <item>
+    <title>수유량 계산기</title>
+    <link>https://parentscalc.com/feeding.html</link>
+    <description>체중과 수유 텀을 입력하면 1회 수유량을 계산</description>
+    <pubDate>2024-04-11</pubDate>
+  </item>
+
+  <item>
+    <title>모유수유량 계산기</title>
+    <link>https://parentscalc.com/breastfeeding.html</link>
+    <description>1회 수유 시간과 간격을 기준으로 총 수유량 계산</description>
+    <pubDate>2024-04-11</pubDate>
+  </item>
+
+  <item>
+    <title>아기 기념일 계산기</title>
+    <link>https://parentscalc.com/baby-anniversary.html</link>
+    <description>아기의 50일, 100일, 1년 등 주요 기념일 계산</description>
+    <pubDate>2024-04-11</pubDate>
+  </item>
+
+  <item>
+    <title>예방접종 스케줄 계산기</title>
+    <link>https://parentscalc.com/vaccine_schedule.html</link>
+    <description>생일을 기준으로 예방접종 시기를 계산</description>
+    <pubDate>2024-04-11</pubDate>
+  </item>
+
+  <item>
+    <title>아기 수면 시간 계산기</title>
+    <link>https://parentscalc.com/sleep-calculator.html</link>
+    <description>생후 개월 수에 따른 적정 수면 시간 확인</description>
+    <pubDate>2024-04-11</pubDate>
+  </item>
+
+  <item>
+    <title>유아 발달 단계 안내기</title>
+    <link>https://parentscalc.com/development-guide.html</link>
+    <description>개월 수에 따른 유아의 발달 정보를 안내</description>
+    <pubDate>2024-04-11</pubDate>
+  </item>
+
+  <item>
+    <title>D-Day 계산기</title>
+    <link>https://parentscalc.com/dday.html</link>
+    <description>목표일까지 남은 날짜를 D-Day로 표시</description>
+    <pubDate>2024-04-11</pubDate>
+  </item>
+
+  <item>
+    <title>물 섭취량 계산기</title>
+    <link>https://parentscalc.com/water-intake.html</link>
+    <description>체중을 기준으로 하루 물 섭취량을 계산</description>
+    <pubDate>2024-04-11</pubDate>
+  </item>
+
+  <item>
+    <title>BMI 계산기</title>
+    <link>https://parentscalc.com/bmi.html</link>
+    <description>키와 체중을 입력해 BMI 지수 계산</description>
+    <pubDate>2024-04-11</pubDate>
+  </item>
+
+</channel>
+</rss>
