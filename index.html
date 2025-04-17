@@ -178,6 +178,11 @@
 
 
 <script>
+  // 특수문자 이스케이프 (정규식용)
+  function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
   // 검색창 토글
   document.addEventListener("DOMContentLoaded", function () {
     const toggle = document.getElementById("searchToggle");
@@ -190,21 +195,63 @@
     }
   });
 
-  // 단어 하이라이트 기능
-  function highlightText() {
-    const keyword = document.getElementById("searchInput").value.trim();
-    const container = document.querySelector(".menu");
+  // 하이라이트 적용
+function highlightText() {
+  const keyword = document.getElementById("searchInput").value.trim();
+  const container = document.querySelector(".menu");
 
-    // 기존 하이라이트 제거
-    const unhighlightedHTML = container.innerHTML.replace(/<span class="highlight">(.*?)<\/span>/g, "$1");
-    container.innerHTML = unhighlightedHTML;
+  // 기존 하이라이트 제거
+  const highlights = container.querySelectorAll("span.highlight");
+  highlights.forEach(span => {
+    const parent = span.parentNode;
+    parent.replaceChild(document.createTextNode(span.textContent), span);
+    parent.normalize();
+  });
 
-    if (!keyword) return;
+  if (!keyword) return;
 
-    const regex = new RegExp(`(${keyword})`, "gi");
-    container.innerHTML = container.innerHTML.replace(regex, '<span class="highlight">$1</span>');
+  const safeKeyword = escapeRegExp(keyword);
+  const regex = new RegExp(safeKeyword, "gi");
+
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+
+  const nodesToUpdate = [];
+
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    if (regex.test(node.nodeValue)) {
+      nodesToUpdate.push(node);
+    }
   }
+
+  nodesToUpdate.forEach(node => {
+    const frag = document.createDocumentFragment();
+    let lastIndex = 0;
+    const matches = [...node.nodeValue.matchAll(regex)];
+
+    matches.forEach(match => {
+      const before = node.nodeValue.slice(lastIndex, match.index);
+      const matchedText = match[0];
+
+      if (before) frag.appendChild(document.createTextNode(before));
+
+      const highlight = document.createElement("span");
+      highlight.className = "highlight";
+      highlight.textContent = matchedText;
+      frag.appendChild(highlight);
+
+      lastIndex = match.index + matchedText.length;
+    });
+
+    const after = node.nodeValue.slice(lastIndex);
+    if (after) frag.appendChild(document.createTextNode(after));
+
+    node.parentNode.replaceChild(frag, node);
+  });
+}
+
 </script>
+
 
 <p style="font-size: 0.85rem; text-align: center; margin-top: 40px;">
   <a href="about.html">사이트 소개</a> |
