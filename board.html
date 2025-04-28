@@ -2,66 +2,65 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>엄마표 놀이 게시판</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+
   <style>
     body {
       font-family: 'Noto Sans KR', sans-serif;
-      background-color: #f9f9f9;
-      margin: 0;
       padding: 20px;
+      background: #f8f8f8;
       text-align: center;
     }
     h1 {
-      font-size: 1.8rem;
-      margin-bottom: 20px;
+      margin-bottom: 30px;
     }
     .post-list {
       max-width: 600px;
       margin: 0 auto;
       text-align: left;
     }
-    .post-item {
-      padding: 15px;
-      border-bottom: 1px solid #ccc;
-    }
-    .post-item a {
+    .post-list a {
+      display: block;
+      padding: 10px;
+      margin-bottom: 10px;
+      background: #fff;
+      border-radius: 8px;
+      border: 1px solid #ddd;
       text-decoration: none;
       color: #333;
-      font-weight: bold;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
+      transition: background 0.3s;
     }
-    .post-item small {
-      display: block;
-      margin-top: 5px;
-      color: #888;
-      font-size: 0.9rem;
+    .post-list a:hover {
+      background: #f0f0f0;
     }
     .write-button {
+      display: inline-block;
       margin-top: 30px;
       padding: 10px 20px;
-      font-size: 1rem;
-      background-color: #4CAF50;
+      background: #ffa07a;
       color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
       text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
     }
   </style>
 </head>
+
 <body>
 
   <h1>엄마표 놀이 게시판</h1>
 
   <div class="post-list" id="postList">
-    <!-- 글 목록이 여기에 표시될 거야 -->
+    <!-- 글 목록이 여기에 자동 추가됨 -->
   </div>
 
-  <a href="write.html" class="write-button">새 글쓰기 ✏️</a>
+  <a href="write.html" class="write-button">글쓰기 ✍️</a>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     // Supabase 연결
     const supabaseUrl = 'https://lqkglbaqcnwbhvdjhwka.supabase.co';
@@ -70,36 +69,28 @@
 
     async function loadPosts() {
       const { data, error } = await supabase
-        .from('posts')  // posts 테이블
+        .from('posts')   // ✅ 테이블 이름
         .select('*')
-        .order('created_at', { ascending: false });  // 최신순 정렬
-
-      const postList = document.getElementById('postList');
+        .order('created_at', { ascending: false });  // 최근 글 순으로
 
       if (error) {
-        postList.innerHTML = '<p>글을 불러올 수 없습니다.</p>';
-        console.error(error);
+        console.error('목록 불러오기 실패:', error.message);
         return;
       }
 
-      if (data.length === 0) {
-        postList.innerHTML = '<p>아직 작성된 글이 없습니다.</p>';
-        return;
-      }
+      const postList = document.getElementById('postList');
+      postList.innerHTML = '';
 
-      // 글 목록 뿌리기
       data.forEach(post => {
-        const postItem = document.createElement('div');
-        postItem.className = 'post-item';
-        postItem.innerHTML = `
-          <a href="read.html?id=${post.id}">${post.title}</a>
-          <small>${new Date(post.created_at).toLocaleDateString('ko-KR')}</small>
-        `;
-        postList.appendChild(postItem);
+        const a = document.createElement('a');
+        a.href = `read.html?id=${post.id}`;
+        a.textContent = post.title || '(제목 없음)';
+        postList.appendChild(a);
       });
     }
 
     loadPosts();
   </script>
+
 </body>
 </html>
