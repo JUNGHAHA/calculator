@@ -61,11 +61,11 @@
 
   <a href="write.html" class="write-button">새 글쓰기 ✏️</a>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     // Supabase 연결
-    const supabaseUrl = '여기에-너의-supabase-url';
-    const supabaseKey = '여기에-너의-supabase-api-key';
+    const supabaseUrl = 'https://lqkglbaqcnwbhvdjhwka.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI';
     const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
     async function loadPosts() {

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>글쓰기 - ParentsCalc</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body {
       font-family: 'Noto Sans KR', sans-serif;
@@ -87,7 +87,7 @@
 
         // 저장된 파일 URL 만들기
         const { data: publicUrlData } = supabase.storage
-          .from('게시판')
+          .from('post-images')
           .getPublicUrl(filePath);
         
         imageUrl = publicUrlData.publicUrl;
@@ -95,7 +95,7 @@
 
       // 글 데이터 삽입
       const { data: insertData, error: insertError } = await supabase
-        .from('post-images') // ✅ 테이블 이름
+        .from('posts') // ✅ 테이블 이름
         .insert([
           {
             title: title,

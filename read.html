@@ -44,6 +44,16 @@
       cursor: pointer;
       display: inline-block;
     }
+  /* 추가 스타일 */
+  .post-image {
+    margin: 20px 0;
+    text-align: center;
+  }
+  .post-image img {
+    max-width: 100%;
+    max-height: 500px;
+    border-radius: 8px;
+  }
   </style>
 </head>
 <body>
@@ -85,9 +95,15 @@
 
       document.getElementById('postTitle').innerText = data.title;
       document.getElementById('postContent').innerText = data.content;
-    }
 
-    loadPost();
+    // 이미지 표시
+    if (data.image_url) {
+      const imgElement = document.createElement('img');
+      imgElement.src = data.image_url;
+      imgElement.alt = data.title;
+      document.getElementById('postImage').appendChild(imgElement);
+      }
+   }
   </script>
 </body>
 </html>
