@@ -1,87 +1,94 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>게시글 보기 | ParentsCalc</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>게시글 읽기</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+
   <style>
     body {
       font-family: 'Noto Sans KR', sans-serif;
-      background-color: #f9f9f9;
       padding: 20px;
+      background: #f8f8f8;
       text-align: center;
     }
-
     .post-container {
-      background: #ffffff;
-      border: 2px dashed #333;
-      border-radius: 15px;
-      padding: 20px;
-      max-width: 600px;
+      max-width: 700px;
       margin: 0 auto;
-      box-shadow: 1px 1px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    h1 {
-      font-size: 1.6rem;
-      margin-bottom: 20px;
-    }
-
-    .post-image img {
-      max-width: 100%;
+      background: #ffffff;
+      padding: 30px;
       border-radius: 10px;
-      margin-bottom: 20px;
-    }
-
-    .post-content {
-      font-size: 1rem;
-      color: #333;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
       text-align: left;
-      line-height: 1.6;
     }
-
-    .back-button {
-      display: inline-block;
-      margin-top: 30px;
-      padding: 10px 20px;
-      background-color: #fcdcd3;
-      color: black;
-      text-decoration: none;
+    .thumbnail {
+      width: 100%;
+      max-height: 400px;
+      object-fit: cover;
       border-radius: 10px;
-      border: 2px dashed black;
-      font-weight: bold;
+      margin-bottom: 20px;
     }
-
-    .back-button:hover {
-      background-color: #f9c2af;
+    .title {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    .content {
+      font-size: 1rem;
+      line-height: 1.7;
+      white-space: pre-line;
+    }
+    .button-group {
+      margin-top: 30px;
+      text-align: center;
+    }
+    .btn {
+      display: inline-block;
+      margin: 5px;
+      padding: 10px 20px;
+      background: #ffa07a;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+    }
+    .btn.delete {
+      background: #f44336;
     }
   </style>
 </head>
+
 <body>
 
-<div class="post-container">
-  <h1 id="post-title">제목 불러오는 중...</h1>
-  <div class="post-image" id="post-image"></div>
-  <div class="post-content" id="post-content"></div>
+  <div class="post-container">
+    <img id="postImage" class="thumbnail" src="" alt="썸네일 이미지" style="display:none;" />
+    <div id="postTitle" class="title"></div>
+    <div id="postContent" class="content"></div>
+  </div>
 
-  <a href="board.html" class="back-button">목록으로</a>
-</div>
+  <div class="button-group">
+    <a href="board.html" class="btn">목록으로 돌아가기</a>
+    <button id="editBtn" class="btn">수정하기</button>
+    <button id="deleteBtn" class="btn delete">삭제하기</button>
+  </div>
 
-<!-- Supabase 연결 -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script>
-  const supabaseUrl = 'https://lqkglbaqcnwbhvdjhwka.supabase.co';  // 🔥 본인 URL 입력
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI';                   // 🔥 본인 API 키 입력
+  const supabaseUrl = 'https://lqkglbaqcnwbhvdjhwka.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI';
   const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-  // 쿼리스트링에서 id 꺼내기
-  const urlParams = new URLSearchParams(window.location.search);
-  const postId = urlParams.get('id');
+  const params = new URLSearchParams(window.location.search);
+  const postId = params.get('id');
 
   async function loadPost() {
     if (!postId) {
-      document.getElementById('post-title').innerText = '게시글이 없습니다.';
+      alert('잘못된 접근입니다.');
+      window.location.href = 'board.html';
       return;
     }
 
@@ -92,21 +99,44 @@
       .single();
 
     if (error || !data) {
-      document.getElementById('post-title').innerText = '게시글을 불러올 수 없습니다.';
-      console.error(error);
+      alert('글을 불러올 수 없습니다.');
+      window.location.href = 'board.html';
       return;
     }
 
-    document.getElementById('post-title').innerText = data.title || '(제목 없음)';
-    document.getElementById('post-content').innerText = data.content || '(내용 없음)';
+    document.getElementById('postTitle').textContent = data.title || '(제목 없음)';
+    document.getElementById('postContent').textContent = data.content || '';
 
     if (data.image_url) {
-      const img = document.createElement('img');
+      const img = document.getElementById('postImage');
       img.src = data.image_url;
-      img.alt = '게시글 이미지';
-      document.getElementById('post-image').appendChild(img);
+      img.style.display = 'block';
     }
   }
+
+  async function deletePost() {
+    const confirmDelete = confirm("정말 삭제하시겠습니까?");
+    if (!confirmDelete) return;
+
+    const { error } = await supabase
+      .from('posts')
+      .delete()
+      .eq('id', postId);
+
+    if (error) {
+      alert('삭제 실패: ' + error.message);
+    } else {
+      alert('삭제되었습니다.');
+      window.location.href = 'board.html';
+    }
+  }
+
+  function editPost() {
+    window.location.href = `write.html?edit=${postId}`;
+  }
+
+  document.getElementById('deleteBtn').addEventListener('click', deletePost);
+  document.getElementById('editBtn').addEventListener('click', editPost);
 
   loadPost();
 </script>

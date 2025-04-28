@@ -19,24 +19,39 @@
       margin-bottom: 30px;
     }
     .post-list {
-      max-width: 600px;
+      max-width: 700px;
       margin: 0 auto;
       text-align: left;
     }
-    .post-list a {
-      display: block;
-      padding: 10px;
-      margin-bottom: 10px;
+    .post-item {
+      display: flex;
+      align-items: center;
       background: #fff;
+      margin-bottom: 15px;
+      padding: 10px;
       border-radius: 8px;
       border: 1px solid #ddd;
-      text-decoration: none;
-      color: #333;
-      font-size: 1.1rem;
       transition: background 0.3s;
+      text-decoration: none;
+      color: inherit;
     }
-    .post-list a:hover {
+    .post-item:hover {
       background: #f0f0f0;
+    }
+    .thumbnail {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-right: 15px;
+      flex-shrink: 0;
+    }
+    .title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .write-button {
       display: inline-block;
@@ -56,7 +71,7 @@
   <h1>엄마표 놀이 게시판</h1>
 
   <div class="post-list" id="postList">
-    <!-- 글 목록이 여기에 자동 추가됨 -->
+    <!-- 글 목록이 여기에 추가됨 -->
   </div>
 
   <a href="write.html" class="write-button">글쓰기 ✍️</a>
@@ -69,9 +84,9 @@
 
     async function loadPosts() {
       const { data, error } = await supabase
-        .from('posts')   // ✅ 테이블 이름
+        .from('posts')  // ✅ 테이블 이름
         .select('*')
-        .order('created_at', { ascending: false });  // 최근 글 순으로
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('목록 불러오기 실패:', error.message);
@@ -83,8 +98,21 @@
 
       data.forEach(post => {
         const a = document.createElement('a');
+        a.className = 'post-item';
         a.href = `read.html?id=${post.id}`;
-        a.textContent = post.title || '(제목 없음)';
+
+        const img = document.createElement('img');
+        img.className = 'thumbnail';
+        img.src = post.image_url || 'https://via.placeholder.com/80x80?text=No+Image'; // 기본 이미지 처리
+        img.alt = '썸네일';
+
+        const title = document.createElement('div');
+        title.className = 'title';
+        title.textContent = post.title || '(제목 없음)';
+
+        a.appendChild(img);
+        a.appendChild(title);
+
         postList.appendChild(a);
       });
     }
