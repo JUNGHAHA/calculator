@@ -86,12 +86,13 @@
         }
 
         // 저장된 파일 URL 만들기
-        const { data: publicUrlData } = supabase.storage
-          .from('post-images')
-          .getPublicUrl(filePath);
-        
-        imageUrl = publicUrlData.publicUrl;
-      }
+  const { data: publicUrlData } = supabase
+    .storage
+    .from('post-images')
+    .getPublicUrl(filePath);
+
+  imageUrl = publicUrlData.publicUrl; 
+}
 
       // 글 데이터 삽입
       const { data: insertData, error: insertError } = await supabase
