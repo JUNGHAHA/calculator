@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>엄마표 놀이 게시판</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+    }
+    .post-list {
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: left;
+    }
+    .post-item {
+      padding: 15px;
+      border-bottom: 1px solid #ccc;
+    }
+    .post-item a {
+      text-decoration: none;
+      color: #333;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+    .post-item small {
+      display: block;
+      margin-top: 5px;
+      color: #888;
+      font-size: 0.9rem;
+    }
+    .write-button {
+      margin-top: 30px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>엄마표 놀이 게시판</h1>
+
+  <div class="post-list" id="postList">
+    <!-- 글 목록이 여기에 표시될 거야 -->
+  </div>
+
+  <a href="write.html" class="write-button">새 글쓰기 ✏️</a>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    // Supabase 연결
+    const supabaseUrl = '여기에-너의-supabase-url';
+    const supabaseKey = '여기에-너의-supabase-api-key';
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    async function loadPosts() {
+      const { data, error } = await supabase
+        .from('posts')  // posts 테이블
+        .select('*')
+        .order('created_at', { ascending: false });  // 최신순 정렬
+
+      const postList = document.getElementById('postList');
+
+      if (error) {
+        postList.innerHTML = '<p>글을 불러올 수 없습니다.</p>';
+        console.error(error);
+        return;
+      }
+
+      if (data.length === 0) {
+        postList.innerHTML = '<p>아직 작성된 글이 없습니다.</p>';
+        return;
+      }
+
+      // 글 목록 뿌리기
+      data.forEach(post => {
+        const postItem = document.createElement('div');
+        postItem.className = 'post-item';
+        postItem.innerHTML = `
+          <a href="read.html?id=${post.id}">${post.title}</a>
+          <small>${new Date(post.created_at).toLocaleDateString('ko-KR')}</small>
+        `;
+        postList.appendChild(postItem);
+      });
+    }
+
+    loadPosts();
+  </script>
+</body>
+</html>

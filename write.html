@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>엄마표 놀이 글쓰기</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body { font-family: 'Noto Sans KR', sans-serif; padding: 20px; }
+    input, textarea, button { display: block; width: 90%; max-width: 500px; margin: 10px auto; padding: 10px; }
+    img { max-width: 90%; margin: 10px auto; display: block; }
+  </style>
+</head>
+<body>
+
+<h1>엄마표 놀이 - 글 작성하기</h1>
+
+<input type="text" id="title" placeholder="글 제목을 입력하세요">
+<textarea id="content" rows="10" placeholder="글 내용을 입력하세요"></textarea>
+
+<input type="file" id="imageInput" accept="image/*">
+
+<button onclick="uploadPost()">등록하기</button>
+
+<script>
+  const supabaseUrl = 'https://lqkglbaqcnwbhvdjhwka.supabase.co].supabase.co';
+  const supabaseKey = '[eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI]';
+  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+  async function uploadPost() {
+    const title = document.getElementById('title').value.trim();
+    const content = document.getElementById('content').value.trim();
+    const imageFile = document.getElementById('imageInput').files[0];
+
+    if (!title || !content) {
+      alert('제목과 내용을 모두 입력하세요!');
+      return;
+    }
+
+    let imageUrl = '';
+
+    // 이미지가 있을 경우 Supabase Storage에 업로드
+    if (imageFile) {
+      const fileName = Date.now() + '-' + imageFile.name;
+      const { data, error } = await supabase.storage.from('post-images').upload(fileName, imageFile);
+
+      if (error) {
+        alert('이미지 업로드 실패: ' + error.message);
+        return;
+      }
+
+      imageUrl = supabase.storage.from('post-images').getPublicUrl(fileName).data.publicUrl;
+    }
+
+    // posts 테이블에 데이터 저장
+    const { data, error } = await supabase.from('posts').insert([
+      { title, content, image_url: imageUrl }
+    ]);
+
+    if (error) {
+      alert('게시글 등록 실패: ' + error.message);
+    } else {
+      alert('게시글이 등록되었습니다!');
+      window.location.href = 'board.html'; // 등록 후 게시판으로 이동 (다음에 만들 파일)
+    }
+  }
+</script>
+
+</body>
+</html>
