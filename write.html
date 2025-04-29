@@ -47,24 +47,26 @@
 
 <body>
 
-  <div class="form-container">
-    <h1 id="formTitle">새 글 작성</h1>
-    <input type="text" id="title" placeholder="제목" />
-    <textarea id="content" rows="10" placeholder="내용"></textarea>
-    <input type="file" id="imageUpload" />
-    <button id="saveBtn">등록하기</button>
-  </div>
+<div class="form-container">
+  <h1 id="formTitle">새 글 작성</h1>
+  <input type="text" id="title" placeholder="제목" />
+  <textarea id="content" rows="10" placeholder="내용"></textarea>
+  <input type="file" id="imageUpload" />
+  <button id="saveBtn">등록하기</button>
+</div>
 
 <script>
+  // ✅ Supabase 연결을 가장 위에 선언
   const supabaseUrl = 'https://lqkglbaqcnwbhvdjhwka.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI';
   const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
+  // URL 파라미터 확인 (수정모드일 경우 id 존재)
   const params = new URLSearchParams(window.location.search);
-  const editId = params.get('edit'); // edit 모드라면 id가 있음
+  const editId = params.get('edit');
 
   async function loadPost() {
-    if (!editId) return; // 새글 작성모드면 패스
+    if (!editId) return; // 작성모드라면 패스
 
     document.getElementById('formTitle').textContent = '글 수정하기';
     document.getElementById('saveBtn').textContent = '수정 완료';
@@ -99,15 +101,15 @@
 
     if (imageFile) {
       const fileName = `${Date.now()}_${imageFile.name}`;
-      const { data, error } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('post-images')
         .upload(fileName, imageFile, {
           cacheControl: '3600',
           upsert: false
         });
 
-      if (error) {
-        alert('이미지 업로드 실패: ' + error.message);
+      if (uploadError) {
+        alert('이미지 업로드 실패: ' + uploadError.message);
         return;
       }
 
@@ -126,7 +128,7 @@
         .update({
           title,
           content,
-          ...(imageUrl && { image_url: imageUrl })  // 이미지를 새로 올렸을 경우만 업데이트
+          ...(imageUrl && { image_url: imageUrl })
         })
         .eq('id', editId);
 
