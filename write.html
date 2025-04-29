@@ -100,7 +100,7 @@
     if (imageFile) {
       const fileName = `${Date.now()}_${imageFile.name}`;
       const { data, error } = await supabase.storage
-        .from('posts')
+        .from('post-images')
         .upload(fileName, imageFile, {
           cacheControl: '3600',
           upsert: false
@@ -113,7 +113,7 @@
 
       const { data: urlData } = supabase
         .storage
-        .from('posts')
+        .from('post-images')
         .getPublicUrl(fileName);
 
       imageUrl = urlData.publicUrl;
