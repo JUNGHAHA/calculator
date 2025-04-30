@@ -104,8 +104,7 @@
   <script>
     const SUPABASE_URL = 'https://lqkglbaqcnwbhvdjhwka.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI';
-    const { createClient } = supabase;
-    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
     // 수정 모드인지 확인
     const urlParams = new URLSearchParams(window.location.search);
@@ -150,7 +149,7 @@
       document.getElementById('formTitle').textContent = '글 수정하기';
       document.getElementById('saveBtn').textContent = '수정하기';
       
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from('posts')
         .select('*')
         .eq('id', editId)
@@ -174,7 +173,7 @@
       if (data.file_url) {
         existingFileUrl = data.file_url;
         const fileInfo = document.getElementById('fileInfo');
-        const fileName = data.file_url.split('/').pop();
+        const fileName = data.file_url.split('/').pop().split('_').slice(1).join('_');
         fileInfo.textContent = `현재 파일: ${fileName}`;
       }
     }
@@ -189,14 +188,23 @@
       if (!file) return '';
       
       const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-      const { data, error } = await supabaseClient
+      
+      // 파일 업로드
+      const { data, error } = await supabase
         .storage
         .from(bucketName)
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
         
-      if (error) throw error;
+      if (error) {
+        console.error('업로드 오류:', error);
+        throw error;
+      }
       
-      const { data: publicUrlData } = supabaseClient
+      // 공개 URL 가져오기
+      const { data: publicUrlData } = supabase
         .storage
         .from(bucketName)
         .getPublicUrl(fileName);
@@ -215,6 +223,9 @@
         alert('제목과 내용을 입력해주세요.');
         return;
       }
+      
+      document.getElementById('saveBtn').disabled = true;
+      document.getElementById('saveBtn').textContent = '처리 중...';
 
       try {
         // 이미지 및 파일 업로드
@@ -234,7 +245,7 @@
         
         if (editId) {
           // 게시글 수정
-          result = await supabaseClient
+          result = await supabase
             .from('posts')
             .update({
               title,
@@ -245,7 +256,7 @@
             .eq('id', editId);
         } else {
           // 새 게시글 작성
-          result = await supabaseClient
+          result = await supabase
             .from('posts')
             .insert([{
               title,
@@ -263,6 +274,8 @@
       } catch (error) {
         alert(`${editId ? '수정' : '등록'} 실패: ${error.message}`);
         console.error(error);
+        document.getElementById('saveBtn').disabled = false;
+        document.getElementById('saveBtn').textContent = editId ? '수정하기' : '등록하기';
       }
     });
   </script>
