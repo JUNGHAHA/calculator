@@ -42,10 +42,6 @@
       font-weight: bold;
       cursor: pointer;
     }
-    button:disabled {
-      background-color: #cccccc;
-      cursor: not-allowed;
-    }
     .file-label {
       display: block;
       margin: 10px 0;
@@ -78,19 +74,12 @@
       cursor: pointer;
       margin-right: 10px;
     }
-    .auth-message {
-      color: #f44336;
-      font-weight: bold;
-      margin: 10px 0;
-      display: none;
-    }
   </style>
 </head>
 <body>
 
   <div class="form-container">
     <h1 id="formTitle">글 작성하기</h1>
-    <div id="authMessage" class="auth-message">관리자만 글을 작성할 수 있습니다.</div>
     <input type="text" id="title" placeholder="제목을 입력하세요" />
     <textarea id="content" rows="8" placeholder="내용을 입력하세요"></textarea>
     
@@ -115,65 +104,14 @@
   <script>
     const SUPABASE_URL = 'https://lqkglbaqcnwbhvdjhwka.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    
-    // 관리자 이메일 설정
-    const ADMIN_EMAIL = 'salliground@gmail.com';
-    let currentUser = null;
-    let isAdmin = false;
+    const { createClient } = supabase;
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
     
     // 수정 모드인지 확인
     const urlParams = new URLSearchParams(window.location.search);
     const editId = urlParams.get('edit');
     let existingImageUrl = '';
     let existingFileUrl = '';
-    
-    // 세션 확인 및 권한 체크
-    async function checkAuth() {
-      // 세션 확인
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('세션 확인 오류:', error);
-        disableForm();
-        return;
-      }
-      
-      if (!session) {
-        // 로그인되지 않은 경우
-        disableForm();
-        return;
-      }
-      
-      currentUser = session.user;
-      
-      // 관리자 권한 확인
-      if (currentUser.email === ADMIN_EMAIL) {
-        isAdmin = true;
-        enableForm();
-      } else {
-        isAdmin = false;
-        disableForm();
-      }
-    }
-    
-    function disableForm() {
-      document.getElementById('title').disabled = true;
-      document.getElementById('content').disabled = true;
-      document.getElementById('imageUpload').disabled = true;
-      document.getElementById('fileUpload').disabled = true;
-      document.getElementById('saveBtn').disabled = true;
-      document.getElementById('authMessage').style.display = 'block';
-    }
-    
-    function enableForm() {
-      document.getElementById('title').disabled = false;
-      document.getElementById('content').disabled = false;
-      document.getElementById('imageUpload').disabled = false;
-      document.getElementById('fileUpload').disabled = false;
-      document.getElementById('saveBtn').disabled = false;
-      document.getElementById('authMessage').style.display = 'none';
-    }
     
     // 이미지 미리보기 기능
     document.getElementById('imageUpload').addEventListener('change', (e) => {
@@ -212,7 +150,7 @@
       document.getElementById('formTitle').textContent = '글 수정하기';
       document.getElementById('saveBtn').textContent = '수정하기';
       
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('posts')
         .select('*')
         .eq('id', editId)
@@ -236,33 +174,29 @@
       if (data.file_url) {
         existingFileUrl = data.file_url;
         const fileInfo = document.getElementById('fileInfo');
-        const fileName = data.file_url.split('/').pop().split('_').slice(1).join('_');
+        const fileName = data.file_url.split('/').pop();
         fileInfo.textContent = `현재 파일: ${fileName}`;
       }
     }
     
+    // 페이지 로드 시 실행
+    if (editId) {
+      loadExistingPost();
+    }
+
     // 파일 업로드 함수
     async function uploadFileToStorage(file, bucketName) {
       if (!file) return '';
       
       const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-      
-      // 파일 업로드
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .storage
         .from(bucketName)
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+        .upload(fileName, file);
         
-      if (error) {
-        console.error('업로드 오류:', error);
-        throw error;
-      }
+      if (error) throw error;
       
-      // 공개 URL 가져오기
-      const { data: publicUrlData } = supabase
+      const { data: publicUrlData } = supabaseClient
         .storage
         .from(bucketName)
         .getPublicUrl(fileName);
@@ -272,11 +206,6 @@
 
     // 저장 버튼 클릭 이벤트
     document.getElementById('saveBtn').addEventListener('click', async () => {
-      if (!isAdmin) {
-        alert('관리자만 글을 작성할 수 있습니다.');
-        return;
-      }
-      
       const title = document.getElementById('title').value.trim();
       const content = document.getElementById('content').value.trim();
       const imageFile = document.getElementById('imageUpload').files[0];
@@ -286,9 +215,6 @@
         alert('제목과 내용을 입력해주세요.');
         return;
       }
-      
-      document.getElementById('saveBtn').disabled = true;
-      document.getElementById('saveBtn').textContent = '처리 중...';
 
       try {
         // 이미지 및 파일 업로드
@@ -308,26 +234,24 @@
         
         if (editId) {
           // 게시글 수정
-          result = await supabase
+          result = await supabaseClient
             .from('posts')
             .update({
               title,
               content,
               image_url: imageUrl,
-              file_url: fileUrl,
-              author_email: ADMIN_EMAIL // 관리자 이메일 저장
+              file_url: fileUrl
             })
             .eq('id', editId);
         } else {
           // 새 게시글 작성
-          result = await supabase
+          result = await supabaseClient
             .from('posts')
             .insert([{
               title,
               content,
               image_url: imageUrl,
-              file_url: fileUrl,
-              author_email: ADMIN_EMAIL // 관리자 이메일 저장
+              file_url: fileUrl
             }]);
         }
         
@@ -339,18 +263,8 @@
       } catch (error) {
         alert(`${editId ? '수정' : '등록'} 실패: ${error.message}`);
         console.error(error);
-        document.getElementById('saveBtn').disabled = false;
-        document.getElementById('saveBtn').textContent = editId ? '수정하기' : '등록하기';
       }
     });
-    
-    // 초기화
-    checkAuth();
-    
-    // 페이지 로드 시 실행
-    if (editId) {
-      loadExistingPost();
-    }
   </script>
 </body>
 </html>

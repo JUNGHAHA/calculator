@@ -15,18 +15,6 @@
     }
     .header {
       margin-bottom: 30px;
-      position: relative;
-    }
-    .admin-link {
-      position: absolute;
-      right: 5px;
-      top: 5px;
-      color: #aaa;
-      text-decoration: none;
-      font-size: 0.9rem;
-    }
-    .admin-link:hover {
-      text-decoration: underline;
     }
     .post-list {
       max-width: 700px;
@@ -75,6 +63,16 @@
       color: #555;
       font-size: 0.9rem;
     }
+    .write-button {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 10px 20px;
+      background: #ffa07a;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+    }
     .empty-list {
       padding: 40px 0;
       color: #999;
@@ -88,7 +86,6 @@
 </head>
 <body>
   <div class="header">
-    <a href="login.html" class="admin-link">관리자</a>
     <h1>엄마표 놀이 게시판</h1>
     <p>자녀와 함께하는 다양한 놀이 아이디어를 공유해보세요!</p>
   </div>
@@ -99,28 +96,13 @@
       게시글을 불러오는 중...
     </div>
   </div>
+  
+  <a href="write.html" class="write-button">글쓰기 ✍️</a>
 
   <script>
     const supabaseUrl = 'https://lqkglbaqcnwbhvdjhwka.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI';
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-    // 인증 상태 확인
-    checkAuthState();
-    
-    async function checkAuthState() {
-      const { data } = await supabase.auth.getSession();
-      
-      // 관리자 로그인이 되어 있으면 관리자 페이지 링크 표시
-      if (data.session) {
-        const adminLink = document.querySelector('.admin-link');
-        adminLink.href = 'admin.html';
-        adminLink.textContent = '관리 페이지';
-      }
-      
-      // 게시글 로드
-      loadPosts();
-    }
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     // 날짜 포맷 함수
     function formatDate(dateString) {
@@ -152,7 +134,7 @@
       container.innerHTML = '';
 
       if (data.length === 0) {
-        container.innerHTML = '<div class="empty-list">아직 게시글이 없습니다.</div>';
+        container.innerHTML = '<div class="empty-list">아직 게시글이 없습니다. 첫 번째 글을 작성해보세요!</div>';
         return;
       }
 
@@ -193,6 +175,8 @@
         container.appendChild(item);
       });
     }
+
+    loadPosts();
   </script>
 </body>
 </html>

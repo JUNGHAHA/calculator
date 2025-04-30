@@ -58,9 +58,6 @@
     .btn.delete {
       background: #f44336;
     }
-    .btn.hidden {
-      display: none;
-    }
     .file-attachment {
       margin-top: 30px;
       padding: 15px;
@@ -90,19 +87,12 @@
       margin-bottom: 20px;
       text-align: right;
     }
-    .author {
-      color: #555;
-      font-size: 0.9rem;
-      margin-bottom: 5px;
-      text-align: right;
-    }
   </style>
 </head>
 <body>
   <div class="post-container">
     <img id="postImage" class="thumbnail" style="display:none;" />
     <div id="postTitle" class="title"></div>
-    <div id="postAuthor" class="author"></div>
     <div id="postDate" class="created-at"></div>
     <div id="postContent" class="content"></div>
     <div id="fileAttachment" class="file-attachment" style="display:none;">
@@ -116,8 +106,8 @@
 
   <div class="button-group">
     <a href="board.html" class="btn">목록으로</a>
-    <button id="editBtn" class="btn hidden">수정</button>
-    <button id="deleteBtn" class="btn delete hidden">삭제</button>
+    <button id="editBtn" class="btn">수정</button>
+    <button id="deleteBtn" class="btn delete">삭제</button>
   </div>
 
   <script>
@@ -126,42 +116,11 @@
     const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     const postId = new URLSearchParams(location.search).get('id');
-    
-    // 관리자 이메일 설정
-    const ADMIN_EMAIL = 'salliground@gmail.com';
-    let isAdmin = false;
-    let postData = null;
 
     // 날짜 포맷 함수
     function formatDate(dateString) {
       const date = new Date(dateString);
       return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
-    }
-    
-    // 세션 확인 및 권한 체크
-    async function checkAuth() {
-      // 세션 확인
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('세션 확인 오류:', error);
-        return;
-      }
-      
-      if (!session) {
-        // 로그인되지 않은 경우
-        isAdmin = false;
-        return;
-      }
-      
-      // 관리자 권한 확인
-      if (session.user.email === ADMIN_EMAIL) {
-        isAdmin = true;
-        
-        // 수정/삭제 버튼 표시
-        document.getElementById('editBtn').classList.remove('hidden');
-        document.getElementById('deleteBtn').classList.remove('hidden');
-      }
     }
 
     async function loadPost() {
@@ -176,16 +135,9 @@
         location.href = 'board.html';
         return;
       }
-      
-      postData = data;
 
       document.getElementById('postTitle').textContent = data.title;
       document.getElementById('postContent').textContent = data.content;
-      
-      // 작성자 표시
-      if (data.author_email) {
-        document.getElementById('postAuthor').textContent = `작성자: ${data.author_email}`;
-      }
       
       if (data.created_at) {
         document.getElementById('postDate').textContent = formatDate(data.created_at);
@@ -212,11 +164,6 @@
     }
 
     async function deletePost() {
-      if (!isAdmin) {
-        alert('관리자만 삭제할 수 있습니다.');
-        return;
-      }
-      
       if (!confirm('정말 삭제하시겠습니까?')) return;
 
       const { error } = await supabase.from('posts').delete().eq('id', postId);
@@ -229,22 +176,12 @@
     }
 
     function editPost() {
-      if (!isAdmin) {
-        alert('관리자만 수정할 수 있습니다.');
-        return;
-      }
-      
       location.href = `write.html?edit=${postId}`;
     }
 
-    // 초기화
     document.getElementById('deleteBtn').addEventListener('click', deletePost);
     document.getElementById('editBtn').addEventListener('click', editPost);
-    
-    // 권한 확인 후 게시글 로드
-    checkAuth().then(() => {
-      loadPost();
-    });
+    loadPost();
   </script>
 </body>
 </html>
