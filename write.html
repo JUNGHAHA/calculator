@@ -185,7 +185,7 @@
     }
 
     // 파일 업로드 함수
-    async function uploadFile(file, bucketName) {
+    async function uploadFileToStorage(file, bucketName) {
       if (!file) return '';
       
       const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
@@ -209,7 +209,7 @@
       const title = document.getElementById('title').value.trim();
       const content = document.getElementById('content').value.trim();
       const imageFile = document.getElementById('imageUpload').files[0];
-      const uploadFile = document.getElementById('fileUpload').files[0];
+      const docFile = document.getElementById('fileUpload').files[0];
 
       if (!title || !content) {
         alert('제목과 내용을 입력해주세요.');
@@ -222,11 +222,11 @@
         let fileUrl = existingFileUrl;
         
         if (imageFile) {
-          imageUrl = await uploadFile(imageFile, 'post-images');
+          imageUrl = await uploadFileToStorage(imageFile, 'post-images');
         }
         
-        if (uploadFile) {
-          fileUrl = await uploadFile(uploadFile, 'post-files');
+        if (docFile) {
+          fileUrl = await uploadFileToStorage(docFile, 'post-files');
         }
         
         // 데이터베이스 저장
@@ -262,6 +262,7 @@
         
       } catch (error) {
         alert(`${editId ? '수정' : '등록'} 실패: ${error.message}`);
+        console.error(error);
       }
     });
   </script>
