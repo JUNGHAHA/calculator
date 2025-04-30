@@ -157,3 +157,26 @@
         
         // 첨부파일 아이콘 표시
         if (post.file_url) {
+          const attachIcon = document.createElement('span');
+          attachIcon.className = 'attachment-icon';
+          attachIcon.textContent = ' 📎';
+          title.appendChild(attachIcon);
+        }
+        
+        const dateSpan = document.createElement('div');
+        dateSpan.className = 'date';
+        dateSpan.textContent = formatDate(post.created_at);
+        
+        infoDiv.appendChild(title);
+        infoDiv.appendChild(dateSpan);
+        
+        item.appendChild(img);
+        item.appendChild(infoDiv);
+        container.appendChild(item);
+      });
+    }
+
+    loadPosts();
+  </script>
+</body>
+</html>
