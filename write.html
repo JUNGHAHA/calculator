@@ -42,16 +42,63 @@
       font-weight: bold;
       cursor: pointer;
     }
+    .file-label {
+      display: block;
+      margin: 10px 0;
+      font-weight: bold;
+      text-align: left;
+      margin-left: 5%;
+    }
+    .preview-image {
+      max-width: 200px;
+      max-height: 200px;
+      margin: 10px auto;
+      border-radius: 8px;
+      display: none;
+    }
+    .file-upload-container {
+      text-align: left;
+      margin-left: 5%;
+      margin-right: 5%;
+      margin-bottom: 10px;
+    }
+    .back-btn {
+      margin-top: 20px;
+      padding: 12px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background-color: #ccc;
+      color: #333;
+      font-weight: bold;
+      cursor: pointer;
+      margin-right: 10px;
+    }
   </style>
 </head>
 <body>
 
   <div class="form-container">
-    <h1>글 작성하기</h1>
+    <h1 id="formTitle">글 작성하기</h1>
     <input type="text" id="title" placeholder="제목을 입력하세요" />
     <textarea id="content" rows="8" placeholder="내용을 입력하세요"></textarea>
-    <input type="file" id="imageUpload" />
-    <button id="saveBtn">등록하기</button>
+    
+    <div class="file-upload-container">
+      <div class="file-label">이미지 업로드</div>
+      <input type="file" id="imageUpload" accept="image/*" />
+      <img id="imagePreview" class="preview-image" />
+    </div>
+    
+    <div class="file-upload-container">
+      <div class="file-label">파일 업로드 (PDF, DOC, 등)</div>
+      <input type="file" id="fileUpload" />
+      <div id="fileInfo" style="margin-top: 5px; font-size: 0.8rem;"></div>
+    </div>
+
+    <div>
+      <button class="back-btn" onclick="location.href='board.html'">취소</button>
+      <button id="saveBtn">등록하기</button>
+    </div>
   </div>
 
   <script>
@@ -59,52 +106,162 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI';
     const { createClient } = supabase;
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // 수정 모드인지 확인
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('edit');
+    let existingImageUrl = '';
+    let existingFileUrl = '';
+    
+    // 이미지 미리보기 기능
+    document.getElementById('imageUpload').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const preview = document.getElementById('imagePreview');
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    
+    // 파일 정보 표시
+    document.getElementById('fileUpload').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const fileInfo = document.getElementById('fileInfo');
+        fileInfo.textContent = `선택된 파일: ${file.name} (${formatFileSize(file.size)})`;
+      }
+    });
+    
+    // 파일 크기 포맷팅
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' bytes';
+      else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+      else return (bytes / 1048576).toFixed(1) + ' MB';
+    }
 
+    // 수정 모드인 경우 기존 데이터 로드
+    async function loadExistingPost() {
+      if (!editId) return;
+      
+      document.getElementById('formTitle').textContent = '글 수정하기';
+      document.getElementById('saveBtn').textContent = '수정하기';
+      
+      const { data, error } = await supabaseClient
+        .from('posts')
+        .select('*')
+        .eq('id', editId)
+        .single();
+        
+      if (error) {
+        alert('게시글을 불러올 수 없습니다.');
+        return;
+      }
+      
+      document.getElementById('title').value = data.title;
+      document.getElementById('content').value = data.content;
+      
+      if (data.image_url) {
+        existingImageUrl = data.image_url;
+        const preview = document.getElementById('imagePreview');
+        preview.src = data.image_url;
+        preview.style.display = 'block';
+      }
+      
+      if (data.file_url) {
+        existingFileUrl = data.file_url;
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = data.file_url.split('/').pop();
+        fileInfo.textContent = `현재 파일: ${fileName}`;
+      }
+    }
+    
+    // 페이지 로드 시 실행
+    if (editId) {
+      loadExistingPost();
+    }
+
+    // 파일 업로드 함수
+    async function uploadFile(file, bucketName) {
+      if (!file) return '';
+      
+      const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+      const { data, error } = await supabaseClient
+        .storage
+        .from(bucketName)
+        .upload(fileName, file);
+        
+      if (error) throw error;
+      
+      const { data: publicUrlData } = supabaseClient
+        .storage
+        .from(bucketName)
+        .getPublicUrl(fileName);
+        
+      return publicUrlData.publicUrl;
+    }
+
+    // 저장 버튼 클릭 이벤트
     document.getElementById('saveBtn').addEventListener('click', async () => {
       const title = document.getElementById('title').value.trim();
       const content = document.getElementById('content').value.trim();
       const imageFile = document.getElementById('imageUpload').files[0];
+      const uploadFile = document.getElementById('fileUpload').files[0];
 
       if (!title || !content) {
         alert('제목과 내용을 입력해주세요.');
         return;
       }
 
-      let imageUrl = '';
-
-      if (imageFile) {
-        const fileName = `${Date.now()}_${imageFile.name}`;
-        const { data: uploadData, error: uploadError } = await supabaseClient
-          .storage
-          .from('post-images')  // ✅ 버킷 이름 확인
-          .upload(fileName, imageFile);
-
-        if (uploadError) {
-          alert('이미지 업로드 실패: ' + uploadError.message);
-          return;
+      try {
+        // 이미지 및 파일 업로드
+        let imageUrl = existingImageUrl;
+        let fileUrl = existingFileUrl;
+        
+        if (imageFile) {
+          imageUrl = await uploadFile(imageFile, 'post-images');
         }
-
-        const { data: publicUrlData } = supabaseClient
-          .storage
-          .from('post-images')
-          .getPublicUrl(fileName);
-
-        imageUrl = publicUrlData.publicUrl;
-      }
-
-      const { error: insertError } = await supabaseClient
-        .from('posts')
-        .insert([{
-          title,
-          content,
-          image_url: imageUrl
-        }]);
-
-      if (insertError) {
-        alert('등록 실패: ' + insertError.message);
-      } else {
-        alert('등록되었습니다!');
+        
+        if (uploadFile) {
+          fileUrl = await uploadFile(uploadFile, 'post-files');
+        }
+        
+        // 데이터베이스 저장
+        let result;
+        
+        if (editId) {
+          // 게시글 수정
+          result = await supabaseClient
+            .from('posts')
+            .update({
+              title,
+              content,
+              image_url: imageUrl,
+              file_url: fileUrl
+            })
+            .eq('id', editId);
+        } else {
+          // 새 게시글 작성
+          result = await supabaseClient
+            .from('posts')
+            .insert([{
+              title,
+              content,
+              image_url: imageUrl,
+              file_url: fileUrl
+            }]);
+        }
+        
+        if (result.error) throw result.error;
+        
+        alert(editId ? '수정되었습니다!' : '등록되었습니다!');
         window.location.href = 'board.html';
+        
+      } catch (error) {
+        alert(`${editId ? '수정' : '등록'} 실패: ${error.message}`);
       }
     });
   </script>

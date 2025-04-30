@@ -52,9 +52,40 @@
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
     }
     .btn.delete {
       background: #f44336;
+    }
+    .file-attachment {
+      margin-top: 30px;
+      padding: 15px;
+      background: #f5f5f5;
+      border-radius: 8px;
+    }
+    .file-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 15px;
+      background: #e0e0e0;
+      border-radius: 8px;
+      color: #333;
+      text-decoration: none;
+      margin-top: 10px;
+    }
+    .file-link:hover {
+      background: #d0d0d0;
+    }
+    .file-icon {
+      margin-right: 10px;
+      font-size: 20px;
+    }
+    .created-at {
+      color: #888;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+      text-align: right;
     }
   </style>
 </head>
@@ -62,7 +93,15 @@
   <div class="post-container">
     <img id="postImage" class="thumbnail" style="display:none;" />
     <div id="postTitle" class="title"></div>
+    <div id="postDate" class="created-at"></div>
     <div id="postContent" class="content"></div>
+    <div id="fileAttachment" class="file-attachment" style="display:none;">
+      <div style="font-weight: bold;">첨부파일</div>
+      <a id="fileLink" class="file-link" target="_blank">
+        <span class="file-icon">📎</span>
+        <span id="fileName">파일 다운로드</span>
+      </a>
+    </div>
   </div>
 
   <div class="button-group">
@@ -77,6 +116,12 @@
     const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     const postId = new URLSearchParams(location.search).get('id');
+
+    // 날짜 포맷 함수
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+    }
 
     async function loadPost() {
       const { data, error } = await supabase
@@ -93,11 +138,28 @@
 
       document.getElementById('postTitle').textContent = data.title;
       document.getElementById('postContent').textContent = data.content;
+      
+      if (data.created_at) {
+        document.getElementById('postDate').textContent = formatDate(data.created_at);
+      }
 
       if (data.image_url) {
         const img = document.getElementById('postImage');
         img.src = data.image_url;
         img.style.display = 'block';
+      }
+      
+      if (data.file_url) {
+        const fileAttachment = document.getElementById('fileAttachment');
+        const fileLink = document.getElementById('fileLink');
+        const fileName = document.getElementById('fileName');
+        
+        fileAttachment.style.display = 'block';
+        fileLink.href = data.file_url;
+        
+        // 파일 이름 추출
+        const extractedName = data.file_url.split('/').pop().split('_').slice(1).join('_');
+        fileName.textContent = extractedName || '첨부파일 다운로드';
       }
     }
 
