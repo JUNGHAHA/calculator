@@ -9,17 +9,17 @@
   <style>
     body {
       font-family: 'Noto Sans KR', sans-serif;
+      background: #f9f9f9;
       padding: 20px;
-      background: #f8f8f8;
       text-align: center;
     }
     .post-container {
       max-width: 700px;
       margin: 0 auto;
-      background: #ffffff;
+      background: white;
       padding: 30px;
       border-radius: 10px;
-      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 0 6px rgba(0,0,0,0.1);
       text-align: left;
     }
     .thumbnail {
@@ -30,13 +30,13 @@
       margin-bottom: 20px;
     }
     .title {
-      font-size: 1.8rem;
+      font-size: 1.5rem;
       font-weight: bold;
       margin-bottom: 20px;
     }
     .content {
       font-size: 1rem;
-      line-height: 1.7;
+      line-height: 1.6;
       white-space: pre-line;
     }
     .button-group {
@@ -44,16 +44,14 @@
       text-align: center;
     }
     .btn {
-      display: inline-block;
-      margin: 5px;
       padding: 10px 20px;
+      margin: 5px;
       background: #ffa07a;
       color: white;
-      text-decoration: none;
+      border: none;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
-      border: none;
     }
     .btn.delete {
       background: #f44336;
@@ -61,9 +59,8 @@
   </style>
 </head>
 <body>
-
   <div class="post-container">
-    <img id="postImage" class="thumbnail" src="" alt="썸네일 이미지" style="display:none;" />
+    <img id="postImage" class="thumbnail" style="display:none;" />
     <div id="postTitle" class="title"></div>
     <div id="postContent" class="content"></div>
   </div>
@@ -74,62 +71,55 @@
     <button id="deleteBtn" class="btn delete">삭제</button>
   </div>
 
-<script>
-  const supabase = supabase.createClient(
-    'https://lqkglbaqcnwbhvdjhwka.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI'
-  );
+  <script>
+    const supabaseUrl = 'https://lqkglbaqcnwbhvdjhwka.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-  const params = new URLSearchParams(window.location.search);
-  const postId = params.get('id');
+    const postId = new URLSearchParams(location.search).get('id');
 
-  async function loadPost() {
-    const { data, error } = await supabase
-      .from('posts')
-      .select('*')
-      .eq('id', postId)
-      .single();
+    async function loadPost() {
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('id', postId)
+        .single();
 
-    if (error || !data) {
-      alert('글을 불러올 수 없습니다.');
-      window.location.href = 'board.html';
-      return;
+      if (error || !data) {
+        alert('글을 불러올 수 없습니다.');
+        location.href = 'board.html';
+        return;
+      }
+
+      document.getElementById('postTitle').textContent = data.title;
+      document.getElementById('postContent').textContent = data.content;
+
+      if (data.image_url) {
+        const img = document.getElementById('postImage');
+        img.src = data.image_url;
+        img.style.display = 'block';
+      }
     }
 
-    document.getElementById('postTitle').textContent = data.title;
-    document.getElementById('postContent').textContent = data.content;
+    async function deletePost() {
+      if (!confirm('정말 삭제하시겠습니까?')) return;
 
-    if (data.image_url) {
-      const img = document.getElementById('postImage');
-      img.src = data.image_url;
-      img.style.display = 'block';
+      const { error } = await supabase.from('posts').delete().eq('id', postId);
+      if (error) {
+        alert('삭제 실패: ' + error.message);
+      } else {
+        alert('삭제되었습니다.');
+        location.href = 'board.html';
+      }
     }
-  }
 
-  async function deletePost() {
-    if (!confirm("정말 삭제할까요?")) return;
-
-    const { error } = await supabase
-      .from('posts')
-      .delete()
-      .eq('id', postId);
-
-    if (error) {
-      alert('삭제 실패: ' + error.message);
-    } else {
-      alert('삭제되었습니다.');
-      window.location.href = 'board.html';
+    function editPost() {
+      location.href = `write.html?edit=${postId}`;
     }
-  }
 
-  function editPost() {
-    window.location.href = `write.html?edit=${postId}`;
-  }
-
-  document.getElementById('editBtn').addEventListener('click', editPost);
-  document.getElementById('deleteBtn').addEventListener('click', deletePost);
-
-  loadPost();
-</script>
+    document.getElementById('deleteBtn').addEventListener('click', deletePost);
+    document.getElementById('editBtn').addEventListener('click', editPost);
+    loadPost();
+  </script>
 </body>
 </html>

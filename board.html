@@ -4,34 +4,27 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>엄마표 놀이 게시판</title>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
-
   <style>
     body {
       font-family: 'Noto Sans KR', sans-serif;
+      background: #f9f9f9;
       padding: 20px;
-      background: #f8f8f8;
       text-align: center;
-    }
-    h1 {
-      margin-bottom: 30px;
     }
     .post-list {
       max-width: 700px;
       margin: 0 auto;
-      text-align: left;
     }
     .post-item {
       display: flex;
       align-items: center;
       background: #fff;
-      margin-bottom: 15px;
-      padding: 10px;
-      border-radius: 8px;
       border: 1px solid #ddd;
-      transition: background 0.3s;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 12px;
       text-decoration: none;
       color: inherit;
     }
@@ -42,13 +35,12 @@
       width: 80px;
       height: 80px;
       object-fit: cover;
-      border-radius: 8px;
+      border-radius: 6px;
       margin-right: 15px;
-      flex-shrink: 0;
     }
     .title {
-      font-size: 1.1rem;
       font-weight: bold;
+      font-size: 1.1rem;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -65,62 +57,51 @@
     }
   </style>
 </head>
-
 <body>
-
   <h1>엄마표 놀이 게시판</h1>
-
-  <div class="post-list" id="postList">
-    <!-- 글 목록이 여기에 추가됨 -->
-  </div>
-
+  <div id="postList" class="post-list"></div>
   <a href="write.html" class="write-button">글쓰기 ✍️</a>
 
   <script>
-    // ✅ Supabase 연결
-    const SUPABASE_URL = 'https://lqkglbaqcnwbhvdjhwka.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI';
-
-    const { createClient } = supabase;
-    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabaseUrl = 'https://lqkglbaqcnwbhvdjhwka.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     async function loadPosts() {
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from('posts')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('목록 불러오기 실패:', error.message);
+        console.error('불러오기 실패:', error.message);
         return;
       }
 
-      const postList = document.getElementById('postList');
-      postList.innerHTML = '';
+      const container = document.getElementById('postList');
+      container.innerHTML = '';
 
       data.forEach(post => {
-        const a = document.createElement('a');
-        a.className = 'post-item';
-        a.href = `read.html?id=${post.id}`;
+        const item = document.createElement('a');
+        item.href = `read.html?id=${post.id}`;
+        item.className = 'post-item';
 
         const img = document.createElement('img');
-        img.className = 'thumbnail';
         img.src = post.image_url || 'https://via.placeholder.com/80x80?text=No+Image';
+        img.className = 'thumbnail';
         img.alt = '썸네일';
 
         const title = document.createElement('div');
         title.className = 'title';
-        title.textContent = post.title || '(제목 없음)';
+        title.textContent = post.title;
 
-        a.appendChild(img);
-        a.appendChild(title);
-
-        postList.appendChild(a);
+        item.appendChild(img);
+        item.appendChild(title);
+        container.appendChild(item);
       });
     }
 
     loadPosts();
   </script>
-
 </body>
 </html>
