@@ -106,6 +106,19 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI';
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
+
+const author_email = 'salliground@gmail.com';
+
+await supabase
+  .from('posts')
+  .insert([{
+    title,
+    content,
+    image_url: imageUrl,
+    author_email  // 👈 이 줄 추가!
+  }]);
+
+
     // 수정 모드인지 확인
     const urlParams = new URLSearchParams(window.location.search);
     const editId = urlParams.get('edit');
