@@ -4,90 +4,127 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>글쓰기</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 2rem auto; }
+    label { display: block; margin-top: 1rem; }
+    input, textarea, button { width: 100%; padding: 0.5rem; margin-top: 0.5rem; }
+  </style>
 </head>
 <body>
-  <h1>게시글 작성</h1>
-
-  <div id="login-section">
-    <input type="email" id="user-email" placeholder="이메일 입력" value="salliground@gmail.com" readonly />
-    <button id="login-btn">로그인 링크 보내기</button>
-  </div>
-
-  <div id="write-section" style="display:none;">
-    <input type="text" id="title" placeholder="제목"/><br/>
-    <textarea id="content" placeholder="내용"></textarea><br/>
-    <input type="file" id="image-upload" />
-    <input type="file" id="file-upload" />
-    <button id="submit-btn">등록하기</button>
-  </div>
+  <h1>글쓰기</h1>
+  <div id="auth-message"></div>
+  <form id="postForm">
+    <label>제목: <input type="text" id="title" required /></label>
+    <label>내용: <textarea id="content" required></textarea></label>
+    <label>이미지 업로드: <input type="file" id="image" accept="image/*" /></label>
+    <label>파일 업로드: <input type="file" id="file" /></label>
+    <button type="submit">등록하기</button>
+  </form>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const supabase = supabase.createClient('https://lqkglbaqcnwbhvdjhwka.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI');
+    const supabaseClient = supabase.createClient(
+      "https://lqkglbaqcnwbhvdjhwka.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI"
+    );
 
-    const loginBtn = document.getElementById('login-btn');
-    const submitBtn = document.getElementById('submit-btn');
+    const postForm = document.getElementById('postForm');
+    const authMessage = document.getElementById('auth-message');
+    const allowedEmail = "salliground@gmail.com";
 
-    // 로그인
-    loginBtn.addEventListener('click', async () => {
-      loginBtn.disabled = true;
-      setTimeout(() => loginBtn.disabled = false, 20000); // 20초 후 다시 활성화
-
-      const { error } = await supabase.auth.signInWithOtp({
-        email: document.getElementById('user-email').value,
-        options: {
-          emailRedirectTo: 'https://parentscalc.com/write.html'
-        }
+    async function sendMagicLinkLogin() {
+      const { data, error } = await supabaseClient.auth.signInWithOtp({
+        email: allowedEmail,
       });
-      if (error) alert("로그인 링크 전송 실패: " + error.message);
-      else alert("이메일을 확인해주세요!");
-    });
-
-    // 로그인 확인 후 UI 보이기
-    async function checkLogin() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        document.getElementById('login-section').style.display = 'none';
-        document.getElementById('write-section').style.display = 'block';
+      if (error) {
+        authMessage.innerText = "로그인 링크 전송 실패: " + error.message;
+      } else {
+        authMessage.innerText = "이메일로 로그인 링크를 보냈습니다. 메일함을 확인해주세요.";
       }
     }
-    checkLogin();
 
-    // 글쓰기
-    submitBtn.addEventListener('click', async () => {
-      const title = document.getElementById('title').value;
-      const content = document.getElementById('content').value;
+    async function checkUserAccess() {
+      const {
+        data: { session }
+      } = await supabaseClient.auth.getSession();
 
-      const imageFile = document.getElementById('image-upload').files[0];
-      const fileFile = document.getElementById('file-upload').files[0];
+      const user = session?.user;
 
-      const { data: { session } } = await supabase.auth.getSession();
+      if (!user || user.email !== allowedEmail) {
+        authMessage.innerText = "접근 권한이 없습니다. 로그인 링크를 보냅니다.";
+        await sendMagicLinkLogin();
+        postForm.style.display = "none";
+        return;
+      }
+
+      authMessage.innerText = "환영합니다, " + user.email;
+    }
+
+    async function uploadFile(file, pathPrefix) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${file.name}`;
+      const filePath = `${fileName}`;
+
+      const { data, error } = await supabaseClient.storage
+        .from('post-images')
+        .upload(filePath, file);
+
+      if (error) throw error;
+
+      const {
+        data: { publicUrl }
+      } = supabaseClient.storage.from('post-images').getPublicUrl(filePath);
+
+      return publicUrl;
+    }
+
+    postForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const title = document.getElementById('title').value.trim();
+      const content = document.getElementById('content').value.trim();
+      const image = document.getElementById('image').files[0];
+      const file = document.getElementById('file').files[0];
+
+      const {
+        data: { session }
+      } = await supabaseClient.auth.getSession();
+
       const currentUser = session?.user;
-      if (!currentUser) return alert("로그인 후 작성 가능합니다.");
-
-      let imageUrl = '', fileUrl = '';
-      if (imageFile) {
-        const { data, error } = await supabase.storage.from('post-images').upload(`${Date.now()}_${imageFile.name}`, imageFile);
-        if (error) return alert("이미지 업로드 실패");
-        imageUrl = `https://[PROJECT-ID].supabase.co/storage/v1/object/public/post-images/${data.path}`;
+      if (!currentUser || currentUser.email !== allowedEmail) {
+        alert("글쓰기 권한이 없습니다.");
+        return;
       }
 
-      if (fileFile) {
-        const { data, error } = await supabase.storage.from('post-files').upload(`${Date.now()}_${fileFile.name}`, fileFile);
-        if (error) return alert("파일 업로드 실패");
-        fileUrl = `https://[PROJECT-ID].supabase.co/storage/v1/object/public/post-files/${data.path}`;
-      }
+      let imageUrl = "";
+      let fileUrl = "";
 
-      const { error } = await supabase.from('posts').insert([{
-        title, content, image_url: imageUrl, file_url: fileUrl, author: currentUser.email
-      }]);
+      try {
+        if (image) imageUrl = await uploadFile(image, "images");
+        if (file) fileUrl = await uploadFile(file, "files");
 
-      if (error) alert("글 등록 실패: " + error.message);
-      else {
-        alert("등록 성공!");
-        window.location.href = 'board.html';
+        const result = await supabaseClient
+          .from('posts')
+          .insert([{
+            title,
+            content,
+            image_url: imageUrl,
+            file_url: fileUrl,
+            author: currentUser.email // ← ✅ 콤마 추가
+          }]);
+
+        if (result.error) {
+          alert("등록 실패: " + result.error.message);
+        } else {
+          alert("글이 등록되었습니다.");
+          location.href = "board.html";
+        }
+      } catch (error) {
+        alert("에러: " + error.message);
       }
     });
+
+    checkUserAccess();
   </script>
 </body>
 </html>
