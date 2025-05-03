@@ -124,7 +124,6 @@
   </div>
   
   <div id="errorInfo" class="error-message" style="display: none;"></div>
-  <div id="debugInfo" class="debug-info" style="display: none;"></div>
   
   <div id="postList" class="post-list">
     <!-- 게시글이 여기에 로드됩니다 -->
@@ -146,11 +145,7 @@
     const debugInfo = document.getElementById('debugInfo');
     const allowedEmail = 'salliground@gmail.com';
 
-    // 디버그 정보 표시
-    function showDebugInfo(info) {
-      debugInfo.style.display = 'block';
-      debugInfo.innerHTML += `<p>${new Date().toLocaleTimeString()}: ${info}</p>`;
-    }
+
 
     // 에러 정보 표시
     function showErrorInfo(message, details) {
