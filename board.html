@@ -305,28 +305,33 @@
       }
     }
 
+
     // Database 설정 정보 확인
-    async function checkDatabaseSetup() {
-      try {
-        showDebugInfo("Supabase 연결 확인 중...");
-        
-        // Supabase 연결 테스트
-        const { data, error } = await supabase.rpc('version');
-        
-        if (error) {
-          showDebugInfo(`Supabase 연결 오류: ${error.message}`);
-          showErrorInfo("Supabase 연결에 실패했습니다", error.message);
-          return false;
-        }
-        
-        showDebugInfo("Supabase 연결 성공!");
-        return true;
-      } catch (err) {
-        showErrorInfo("Supabase 연결 오류", err.message);
-        showDebugInfo(`연결 확인 예외: ${err.message}`);
-        return false;
-      }
+async function checkDatabaseSetup() {
+  try {
+    showDebugInfo("Supabase 연결 확인 중...");
+    
+    // 간단한 쿼리로 연결 테스트 (예: posts 테이블의 첫 번째 ID 불러오기)
+    const { data, error } = await supabase
+      .from('posts')
+      .select('id')
+      .limit(1);
+
+    if (error) {
+      showDebugInfo(`Supabase 연결 오류: ${error.message}`);
+      showErrorInfo("Supabase 연결에 실패했습니다", error.message);
+      return false;
     }
+
+    showDebugInfo("Supabase 연결 성공!");
+    return true;
+  } catch (err) {
+    showErrorInfo("Supabase 연결 오류", err.message);
+    showDebugInfo(`연결 확인 예외: ${err.message}`);
+    return false;
+  }
+}
+
 
     // 인증 상태 변경 이벤트 리스너
     supabase.auth.onAuthStateChange((event, session) => {
