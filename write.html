@@ -102,6 +102,21 @@
   </div>
 
   <script>
+
+// 로그인 함수 - 페이지 진입 시 자동 로그인 (1회 발송)
+async function sendMagicLinkLogin() {
+  const { data, error } = await supabaseClient.auth.signInWithOtp({
+    email: 'salliground@gmail.com',
+  });
+
+  if (error) {
+    alert('로그인 링크 전송 실패: ' + error.message);
+  } else {
+    alert('로그인 링크가 이메일로 전송되었습니다.');
+  }
+}
+
+
 let currentUser;
 
 async function checkUserAccess() {
@@ -269,6 +284,7 @@ checkUserAccess();
               content,
               image_url: imageUrl,
               file_url: fileUrl
+              author: currentUser.email
             }]);
         }
         
