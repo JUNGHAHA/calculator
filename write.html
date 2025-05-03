@@ -102,6 +102,23 @@
   </div>
 
   <script>
+let currentUser;
+
+async function checkUserAccess() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  currentUser = user;
+  const email = user?.email;
+
+  if (email !== 'salliground@gmail.com') {
+    alert('접근 권한이 없습니다.');
+    window.location.href = 'board.html';
+  }
+}
+
+checkUserAccess();
+
+
     const SUPABASE_URL = 'https://lqkglbaqcnwbhvdjhwka.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI';
     const { createClient } = supabase;
