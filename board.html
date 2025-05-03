@@ -97,30 +97,26 @@
     </div>
   </div>
   
- 
-<!-- ... (기존 <head> 및 <body> 내용 동일) ... -->
-
-  <a href="write.html" class="write-button" id="writeBtn" style="display: none;">글쓰기 ✍️</a>
+  <a href="write.html" class="write-button">글쓰기 ✍️</a>
 
   <script>
     const supabaseUrl = 'https://lqkglbaqcnwbhvdjhwka.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // 그대로 유지
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI';
     const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    // 글쓰기 버튼 제어
-    async function checkLogin() {
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (session && session.user && session.user.email === 'salliground@gmail.com') {
-        document.getElementById('writeBtn').style.display = 'inline-block';
+    // 날짜 포맷 함수
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      const now = new Date();
+      const isToday = date.toDateString() === now.toDateString();
+      
+      if (isToday) {
+        return `오늘 ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
       } else {
-        document.getElementById('writeBtn').style.display = 'none';
+        return `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`;
       }
     }
 
-    checkLogin();
-
-    // 기존 글 불러오기 함수
     async function loadPosts() {
       const { data, error } = await supabase
         .from('posts')
@@ -159,6 +155,7 @@
         title.className = 'title';
         title.textContent = post.title;
         
+        // 첨부파일 아이콘 표시
         if (post.file_url) {
           const attachIcon = document.createElement('span');
           attachIcon.className = 'attachment-icon';
@@ -177,18 +174,6 @@
         item.appendChild(infoDiv);
         container.appendChild(item);
       });
-    }
-
-    function formatDate(dateString) {
-      const date = new Date(dateString);
-      const now = new Date();
-      const isToday = date.toDateString() === now.toDateString();
-      
-      if (isToday) {
-        return `오늘 ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
-      } else {
-        return `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`;
-      }
     }
 
     loadPosts();
