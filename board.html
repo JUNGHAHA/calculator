@@ -82,6 +82,18 @@
       max-width: 200px;
       margin-bottom: 10px;
     }
+    .login-status {
+      font-size: 0.9rem;
+      margin-top: 20px;
+      color: #666;
+    }
+    .login-button {
+      background: none;
+      border: none;
+      color: #ffa07a;
+      cursor: pointer;
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -97,28 +109,48 @@
     </div>
   </div>
   
- 
-<!-- ... (기존 <head> 및 <body> 내용 동일) ... -->
-
   <a href="write.html" class="write-button" id="writeBtn" style="display: none;">글쓰기 ✍️</a>
+  
+  <div class="login-status" id="loginStatus"></div>
 
   <script>
     const supabaseUrl = 'https://lqkglbaqcnwbhvdjhwka.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // 그대로 유지
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI';
     const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    const loginStatus = document.getElementById('loginStatus');
+    const allowedEmail = 'salliground@gmail.com';
 
-    // 글쓰기 버튼 제어
+    // 글쓰기 버튼 및 로그인 상태 제어
     async function checkLogin() {
       const { data: { session } } = await supabase.auth.getSession();
+      const writeBtn = document.getElementById('writeBtn');
 
-      if (session && session.user && session.user.email === 'salliground@gmail.com') {
-        document.getElementById('writeBtn').style.display = 'inline-block';
+      if (session && session.user) {
+        if (session.user.email === allowedEmail) {
+          writeBtn.style.display = 'inline-block';
+          loginStatus.innerHTML = `관리자로 로그인됨 (<button class="login-button" id="logoutBtn">로그아웃</button>)`;
+          
+          // 로그아웃 버튼 이벤트 추가
+          document.getElementById('logoutBtn').addEventListener('click', async () => {
+            const { error } = await supabase.auth.signOut();
+            if (!error) {
+              location.reload();
+            }
+          });
+        } else {
+          writeBtn.style.display = 'none';
+          loginStatus.textContent = `${session.user.email}로 로그인됨 (글쓰기 권한 없음)`;
+        }
       } else {
-        document.getElementById('writeBtn').style.display = 'none';
+        writeBtn.style.display = 'none';
+        loginStatus.innerHTML = `<button class="login-button" id="adminLoginBtn">관리자 로그인</button>`;
+        
+        // 관리자 로그인 버튼 이벤트 추가
+        document.getElementById('adminLoginBtn').addEventListener('click', () => {
+          window.location.href = 'write.html';
+        });
       }
     }
-
-    checkLogin();
 
     // 기존 글 불러오기 함수
     async function loadPosts() {
@@ -191,7 +223,18 @@
       }
     }
 
-    loadPosts();
+    // 인증 상태 변경 이벤트 리스너
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        checkLogin();
+      }
+    });
+
+    // 초기화
+    document.addEventListener('DOMContentLoaded', () => {
+      loadPosts();
+      checkLogin();
+    });
   </script>
 </body>
 </html>
