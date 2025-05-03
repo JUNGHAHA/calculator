@@ -145,6 +145,17 @@
     const debugInfo = document.getElementById('debugInfo');
     const allowedEmail = 'salliground@gmail.com';
 
+function showDebugInfo(message) {
+  let debugElement = document.getElementById('debugInfo');
+  if (!debugElement) {
+    debugElement = document.createElement('div');
+    debugElement.id = 'debugInfo';
+    debugElement.className = 'debug-info';
+    document.body.appendChild(debugElement);
+  }
+  const time = new Date().toLocaleTimeString();
+  debugElement.innerHTML += `[${time}] ${message}<br>`;
+}
 
 
     // 에러 정보 표시
