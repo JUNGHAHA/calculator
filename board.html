@@ -137,7 +137,8 @@
   <div class="login-status" id="loginStatus"></div>
 
   <!-- 디버깅 정보 출력용 -->
-  <div id="debugInfo" class="debug-info" style="display: block;"></div>
+  <div id="debugInfo" class="debug-info" style="display: none;"></div>
+
 
   <script>
     const supabaseUrl = 'https://lqkglbaqcnwbhvdjhwka.supabase.co';
@@ -179,19 +180,21 @@
         const writeBtn = document.getElementById('writeBtn');
         const session = data.session;
 
-        if (session && session.user) {
-          showDebugInfo(`로그인 사용자: ${session.user.email}`);
-          if (session.user.email === allowedEmail) {
-            writeBtn.style.display = 'inline-block';
-            loginStatus.innerHTML = `관리자로 로그인됨 (<button class="login-button" id="logoutBtn">로그아웃</button>)`;
-            
-            // 로그아웃 버튼 이벤트 추가
-            document.getElementById('logoutBtn').addEventListener('click', async () => {
-              const { error } = await supabase.auth.signOut();
-              if (!error) {
-                location.reload();
-              }
-            });
+if (session.user.email === allowedEmail) {
+  writeBtn.style.display = 'inline-block';
+  loginStatus.innerHTML = `관리자로 로그인됨 (<button class="login-button" id="logoutBtn">로그아웃</button>)`;
+
+  // ✅ 디버그 토글 버튼 추가 (여기!)
+  addDebugToggleButton();
+
+  // 로그아웃 버튼 이벤트 추가
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    const { error } = await supabase.auth.signOut();
+    if (!error) {
+      location.reload();
+    }
+  });
+
           } else {
             writeBtn.style.display = 'none';
             loginStatus.textContent = `${session.user.email}로 로그인됨 (글쓰기 권한 없음)`;
