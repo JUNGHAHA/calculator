@@ -8,6 +8,7 @@
     body { font-family: Arial, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
     label { display: block; margin-top: 1rem; }
     input, textarea, button { width: 100%; padding: 0.5rem; margin-top: 0.5rem; }
+    #content { min-height: 250px; }
     .button { 
       display: inline-block;
       padding: 0.5rem 1rem;
@@ -32,6 +33,40 @@
       background-color: #f8f8f8;
       border-radius: 4px;
     }
+    .editor-buttons {
+      margin-bottom: 5px;
+      display: flex;
+      gap: 5px;
+    }
+    .editor-button {
+      padding: 5px 10px;
+      background-color: #f0f0f0;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      cursor: pointer;
+      flex: none;
+    }
+    .editor-button:hover {
+      background-color: #e0e0e0;
+    }
+    .url-input-container {
+      display: none;
+      margin-top: 5px;
+      padding: 10px;
+      background-color: #f5f5f5;
+      border-radius: 4px;
+    }
+    #url-text, #url-link {
+      width: calc(100% - 10px);
+      margin-bottom: 5px;
+    }
+    .url-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    .url-buttons button {
+      flex: 1;
+    }
   </style>
 </head>
 <body>
@@ -45,9 +80,27 @@
 
   <form id="postForm" style="display: none;">
     <label>제목: <input type="text" id="title" required /></label>
-    <label>내용: <textarea id="content" rows="10" required></textarea></label>
+    
+    <!-- 본문 에디터 영역 -->
+    <label>내용:</label>
+    <div class="editor-buttons">
+      <button type="button" class="editor-button" id="link-button">링크 추가</button>
+    </div>
+    
+    <!-- 링크 입력 영역 -->
+    <div id="url-input-container" class="url-input-container">
+      <input type="text" id="url-text" placeholder="링크에 표시될 텍스트" />
+      <input type="url" id="url-link" placeholder="https://example.com" />
+      <div class="url-buttons">
+        <button type="button" id="insert-link" class="button">삽입</button>
+        <button type="button" id="cancel-link" class="button" style="background-color: #888;">취소</button>
+      </div>
+    </div>
+    
+    <textarea id="content" rows="10" required></textarea>
+    
     <label>이미지 업로드: <input type="file" id="image" accept="image/*" /></label>
-    <label>파일 업로드: <input type="file" id="file" accept="application/x-hwp, application/haansofthwp, application/haansofthwpx, .hwp, .hwpx" /></label>
+    <label>파일 업로드: <input type="file" id="file" accept="application/x-hwp, application/haansofthwp, application/haansofthwpx, .hwp, .hwpx, application/pdf, .pdf" /></label>
     <div style="display: flex; gap: 10px; margin-top: 1rem;">
       <button type="submit" class="button">등록하기</button>
       <a href="board.html" class="button" style="background-color: #888;">취소</a>
@@ -64,6 +117,7 @@
     const authMessage = document.getElementById('auth-message');
     const loginSection = document.getElementById('login-section');
     const loginButton = document.getElementById('login-button');
+    const contentTextarea = document.getElementById('content');
     const allowedEmail = "salliground@gmail.com";
 
     // URL에서 파라미터 추출 함수
@@ -122,35 +176,35 @@
       const fileName = `${Date.now()}_${file.name}`;
       const filePath = fileName;
 
-   // 콘솔에 파일 정보 출력 (디버깅용)
-  console.log("업로드 시도:", file.name, file.type, file.size);
-  
-  // 파일 타입에 따른 contentType 설정
-  const options = {
-    contentType: file.type || 'application/octet-stream' // 기본값 설정
-  };
-  
-  try {
-    const { data, error } = await supabaseClient.storage
-      .from('post-files')
-      .upload(filePath, file, options);
+      // 콘솔에 파일 정보 출력 (디버깅용)
+      console.log("업로드 시도:", file.name, file.type, file.size);
+      
+      // 파일 타입에 따른 contentType 설정
+      const options = {
+        contentType: file.type || 'application/octet-stream' // 기본값 설정
+      };
+      
+      try {
+        const { data, error } = await supabaseClient.storage
+          .from('post-files')
+          .upload(filePath, file, options);
 
-    if (error) {
-      console.error("파일 업로드 오류:", error);
-      throw error;
+        if (error) {
+          console.error("파일 업로드 오류:", error);
+          throw error;
+        }
+
+        const {
+          data: { publicUrl }
+        } = supabaseClient.storage.from('post-files').getPublicUrl(filePath);
+
+        console.log("업로드 성공:", publicUrl);
+        return publicUrl;
+      } catch (error) {
+        console.error("파일 업로드 중 예외 발생:", error);
+        throw error;
+      }
     }
-
-    const {
-      data: { publicUrl }
-    } = supabaseClient.storage.from('post-files').getPublicUrl(filePath);
-
-    console.log("업로드 성공:", publicUrl);
-    return publicUrl;
-  } catch (error) {
-    console.error("파일 업로드 중 예외 발생:", error);
-    throw error;
-  }
-}
 
     // 폼 제출 처리
     postForm.addEventListener('submit', async (e) => {
@@ -179,10 +233,14 @@
       authMessage.innerText = "게시글 등록 중...";
       let imageUrl = null;
       let fileUrl = null;
+      let fileName = null;
 
       try {
         if (image) imageUrl = await uploadFile(image);
-        if (file) fileUrl = await uploadFile(file);
+        if (file) {
+          fileUrl = await uploadFile(file);
+          fileName = file.name; // 파일 이름 저장
+        }
 
         const { data, error } = await supabaseClient
           .from('posts')
@@ -191,6 +249,7 @@
             content,
             image_url: imageUrl,
             file_url: fileUrl,
+            file_name: fileName, // 파일 이름 저장
             author_email: currentUser.email
           }]);
 
@@ -239,6 +298,54 @@
         postForm.style.display = "none";
         authMessage.innerText = "게시판 글쓰기를 위해 로그인이 필요합니다.";
       }
+    });
+    
+    // 링크 추가 버튼 이벤트
+    document.getElementById('link-button').addEventListener('click', function() {
+      document.getElementById('url-input-container').style.display = 'block';
+    });
+    
+    // 링크 취소 버튼 이벤트
+    document.getElementById('cancel-link').addEventListener('click', function() {
+      document.getElementById('url-input-container').style.display = 'none';
+      document.getElementById('url-text').value = '';
+      document.getElementById('url-link').value = '';
+    });
+    
+    // 링크 삽입 버튼 이벤트
+    document.getElementById('insert-link').addEventListener('click', function() {
+      const urlText = document.getElementById('url-text').value.trim();
+      const urlLink = document.getElementById('url-link').value.trim();
+      
+      if (!urlLink) {
+        alert('링크 URL을 입력해주세요.');
+        return;
+      }
+      
+      // 링크 텍스트가 없으면 URL을 텍스트로 사용
+      const displayText = urlText || urlLink;
+      
+      // 마크다운 형식의 링크 생성
+      const markdownLink = `[${displayText}](${urlLink})`;
+      
+      // 현재 커서 위치에 링크 삽입
+      const textarea = document.getElementById('content');
+      const startPos = textarea.selectionStart;
+      const endPos = textarea.selectionEnd;
+      const textBefore = textarea.value.substring(0, startPos);
+      const textAfter = textarea.value.substring(endPos, textarea.value.length);
+      
+      textarea.value = textBefore + markdownLink + textAfter;
+      
+      // 입력 필드 초기화 및 숨기기
+      document.getElementById('url-input-container').style.display = 'none';
+      document.getElementById('url-text').value = '';
+      document.getElementById('url-link').value = '';
+      
+      // 포커스를 텍스트 영역으로 되돌림
+      textarea.focus();
+      textarea.selectionStart = startPos + markdownLink.length;
+      textarea.selectionEnd = startPos + markdownLink.length;
     });
   </script>
 </body>
