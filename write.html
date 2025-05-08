@@ -233,15 +233,12 @@
       authMessage.innerText = "게시글 등록 중...";
       let imageUrl = null;
       let fileUrl = null;
-      let fileName = null;
 
       try {
         if (image) imageUrl = await uploadFile(image);
-        if (file) {
-          fileUrl = await uploadFile(file);
-          fileName = file.name; // 파일 이름 저장
-        }
+        if (file) fileUrl = await uploadFile(file);
 
+        // file_name 필드 제거
         const { data, error } = await supabaseClient
           .from('posts')
           .insert([{
@@ -249,7 +246,6 @@
             content,
             image_url: imageUrl,
             file_url: fileUrl,
-            file_name: fileName, // 파일 이름 저장
             author_email: currentUser.email
           }]);
 
