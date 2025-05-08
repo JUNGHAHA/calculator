@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>게시글 읽기</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> <!-- ✅ 마크다운 렌더링용 -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
   <style>
     body {
@@ -117,7 +118,6 @@
 
     const postId = new URLSearchParams(location.search).get('id');
 
-    // 날짜 포맷 함수
     function formatDate(dateString) {
       const date = new Date(dateString);
       return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
@@ -137,7 +137,7 @@
       }
 
       document.getElementById('postTitle').textContent = data.title;
-      document.getElementById('postContent').textContent = data.content;
+      document.getElementById('postContent').innerHTML = marked.parse(data.content || ''); // ✅ 링크 포함 렌더링
       
       if (data.created_at) {
         document.getElementById('postDate').textContent = formatDate(data.created_at);
@@ -148,16 +148,15 @@
         img.src = data.image_url;
         img.style.display = 'block';
       }
-      
+
       if (data.file_url) {
         const fileAttachment = document.getElementById('fileAttachment');
         const fileLink = document.getElementById('fileLink');
         const fileName = document.getElementById('fileName');
-        
+
         fileAttachment.style.display = 'block';
         fileLink.href = data.file_url;
-        
-        // 파일 이름 추출
+
         const extractedName = data.file_url.split('/').pop().split('_').slice(1).join('_');
         fileName.textContent = extractedName || '첨부파일 다운로드';
       }
