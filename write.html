@@ -3,577 +3,165 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>글쓰기</title>
+  <title>글쓰기 / 수정하기</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
     label { display: block; margin-top: 1rem; }
     input, textarea, button { width: 100%; padding: 0.5rem; margin-top: 0.5rem; }
     #content { min-height: 250px; }
-    .button { 
-      display: inline-block;
-      padding: 0.5rem 1rem;
-      background-color: #4CAF50;
-      color: white;
-      text-decoration: none;
-      border-radius: 4px;
-      border: none;
-      cursor: pointer;
-      margin-top: 1rem;
-    }
-    .login-container {
-      text-align: center;
-      padding: 2rem;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      margin-top: 2rem;
-    }
-    #auth-message {
-      margin: 1rem 0;
-      padding: 0.5rem;
-      background-color: #f8f8f8;
-      border-radius: 4px;
-    }
-    .editor-buttons {
-      margin-bottom: 5px;
-      display: flex;
-      gap: 5px;
-    }
-    .editor-button {
-      padding: 5px 10px;
-      background-color: #f0f0f0;
-      border: 1px solid #ccc;
-      border-radius: 3px;
-      cursor: pointer;
-      flex: none;
-    }
-    .editor-button:hover {
-      background-color: #e0e0e0;
-    }
-    .url-input-container {
-      display: none;
-      margin-top: 5px;
-      padding: 10px;
-      background-color: #f5f5f5;
-      border-radius: 4px;
-    }
-    #url-text, #url-link {
-      width: calc(100% - 10px);
-      margin-bottom: 5px;
-    }
-    .url-buttons {
-      display: flex;
-      gap: 10px;
-    }
-    .url-buttons button {
-      flex: 1;
-    }
-    .current-file {
-      background-color: #f8f8f8;
-      padding: 10px;
-      border-radius: 4px;
-      margin-top: 5px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .current-file-name {
-      word-break: break-all;
-    }
-    .file-remove {
-      color: red;
-      cursor: pointer;
-      margin-left: 10px;
-    }
-    .image-preview {
-      max-width: 100%;
-      max-height: 200px;
-      margin-top: 10px;
-      border-radius: 4px;
-    }
+    .button { display: inline-block; padding: 0.5rem 1rem; background-color: #4CAF50; color: white; border-radius: 4px; border: none; cursor: pointer; margin-top: 1rem; }
+    .login-container { text-align: center; padding: 2rem; border: 1px solid #ddd; border-radius: 8px; margin-top: 2rem; }
+    .editor-buttons { margin-bottom: 5px; display: flex; gap: 5px; }
+    .editor-button { padding: 5px 10px; background-color: #f0f0f0; border: 1px solid #ccc; border-radius: 3px; cursor: pointer; }
+    .url-input-container { display: none; margin-top: 5px; background: #f5f5f5; padding: 10px; border-radius: 4px; }
+    #auth-message { margin: 1rem 0; padding: 0.5rem; background: #f8f8f8; border-radius: 4px; }
   </style>
 </head>
 <body>
-  <h1 id="pageTitle">글쓰기</h1>
+  <h1>글쓰기 / 수정하기</h1>
   <div id="auth-message"></div>
-  <div id="login-section" class="login-container" style="display: none;">
-    <p>게시판 글쓰기는 관리자만 가능합니다.</p>
+  <div id="login-section" class="login-container" style="display:none;">
+    <p>관리자 로그인 필요</p>
     <input type="email" id="login-email" value="salliground@gmail.com" readonly />
     <button id="login-button" class="button">로그인 링크 받기</button>
   </div>
 
-  <form id="postForm" style="display: none;">
+  <form id="postForm" style="display:none;">
     <label>제목: <input type="text" id="title" required /></label>
-    
-    <!-- 본문 에디터 영역 -->
     <label>내용:</label>
     <div class="editor-buttons">
       <button type="button" class="editor-button" id="link-button">링크 추가</button>
     </div>
-    
-    <!-- 링크 입력 영역 -->
     <div id="url-input-container" class="url-input-container">
-      <input type="text" id="url-text" placeholder="링크에 표시될 텍스트" />
+      <input type="text" id="url-text" placeholder="링크 텍스트" />
       <input type="url" id="url-link" placeholder="https://example.com" />
-      <div class="url-buttons">
-        <button type="button" id="insert-link" class="button">삽입</button>
-        <button type="button" id="cancel-link" class="button" style="background-color: #888;">취소</button>
-      </div>
+      <button type="button" id="insert-link" class="button">삽입</button>
+      <button type="button" id="cancel-link" class="button" style="background:#888;">취소</button>
     </div>
-    
     <textarea id="content" rows="10" required></textarea>
-    
+
     <label>이미지 업로드: <input type="file" id="image" accept="image/*" /></label>
-    <!-- 현재 이미지 표시 영역 -->
-    <div id="current-image-container" style="display: none;">
-      <div class="current-file">
-        <div class="current-file-name">현재 이미지: <span id="current-image-name"></span></div>
-        <span class="file-remove" id="remove-image">삭제</span>
-      </div>
-      <img id="image-preview" class="image-preview" />
-    </div>
-    
-    <label>파일 업로드: <input type="file" id="file" accept="application/x-hwp, application/haansofthwp, application/haansofthwpx, .hwp, .hwpx, application/pdf, .pdf" /></label>
-    <!-- 현재 파일 표시 영역 -->
-    <div id="current-file-container" style="display: none;">
-      <div class="current-file">
-        <div class="current-file-name">현재 파일: <span id="current-file-name"></span></div>
-        <span class="file-remove" id="remove-file">삭제</span>
-      </div>
-    </div>
-    
-    <div style="display: flex; gap: 10px; margin-top: 1rem;">
-      <button type="submit" class="button" id="submit-button">등록하기</button>
-      <a href="board.html" class="button" style="background-color: #888;">취소</a>
-    </div>
+    <img id="previewImage" style="max-width:100%; margin-top:10px; display:none;" />
+
+    <label>파일 업로드: <input type="file" id="file" /></label>
+    <div id="fileNameDisplay" style="margin-top:5px; color:gray;"></div>
+
+    <button type="submit" class="button">등록하기</button>
+    <a href="board.html" class="button" style="background:#888;">취소</a>
   </form>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const supabaseUrl = 'https://lqkglbaqcnwbhvdjhwka.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI';
-    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
-    const postForm = document.getElementById('postForm');
-    const authMessage = document.getElementById('auth-message');
-    const loginSection = document.getElementById('login-section');
-    const loginButton = document.getElementById('login-button');
-    const contentTextarea = document.getElementById('content');
-    const titleInput = document.getElementById('title');
-    const submitButton = document.getElementById('submit-button');
-    const pageTitle = document.getElementById('pageTitle');
+    const supabase = supabase.createClient(
+      'https://lqkglbaqcnwbhvdjhwka.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+    );
     const allowedEmail = "salliground@gmail.com";
-    
-    // 수정 모드 관련 변수
-    let isEditMode = false;
-    let editPostId = null;
-    let currentImageUrl = null;
-    let currentFileUrl = null;
-    let currentFileName = null;
-    let removeImage = false;
-    let removeFile = false;
+    const editId = new URLSearchParams(location.search).get("edit");
 
-    // URL에서 파라미터 추출 함수
-    function getParameterByName(name, url = window.location.href) {
-      name = name.replace(/[\[\]]/g, '\\$&');
-      var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
-          results = regex.exec(url);
-      if (!results) return null;
-      if (!results[2]) return '';
-      return decodeURIComponent(results[2].replace(/\+/g, ' '));
-    }
+    document.getElementById('link-button').onclick = () => {
+      document.getElementById('url-input-container').style.display = 'block';
+    };
+    document.getElementById('cancel-link').onclick = () => {
+      document.getElementById('url-input-container').style.display = 'none';
+    };
+    document.getElementById('insert-link').onclick = () => {
+      const text = document.getElementById('url-text').value || document.getElementById('url-link').value;
+      const url = document.getElementById('url-link').value;
+      const markdown = `[${text}](${url})`;
+      const textarea = document.getElementById('content');
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      textarea.value = textarea.value.substring(0, start) + markdown + textarea.value.substring(end);
+      textarea.focus();
+      textarea.selectionStart = textarea.selectionEnd = start + markdown.length;
+      document.getElementById('url-input-container').style.display = 'none';
+    };
 
-    // Magic Link 로그인 설정
-    loginButton.addEventListener('click', async () => {
+    document.getElementById('login-button').onclick = async () => {
       const email = document.getElementById('login-email').value;
-      authMessage.innerText = "로그인 링크 전송 중...";
-      
-      try {
-        const { data, error } = await supabaseClient.auth.signInWithOtp({
-          email: email,
-          options: {
-            emailRedirectTo: 'https://parentscalc.com/write.html'
-          }
-        });
-        
-        if (error) throw error;
-        authMessage.innerText = "이메일로 로그인 링크를 보냈습니다. 메일함을 확인해주세요.";
-      } catch (error) {
-        authMessage.innerText = "로그인 링크 전송 실패: " + error.message;
-      }
-    });
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.href }
+      });
+      document.getElementById('auth-message').textContent = error ? error.message : '링크를 메일함에서 확인하세요.';
+    };
 
-    // 로그인 상태 확인
-    async function checkUserAccess() {
-      console.log("사용자 접근 권한 확인 중...");
-      const {
-        data: { session }
-      } = await supabaseClient.auth.getSession();
-
-      const user = session?.user;
-      console.log("현재 로그인 상태:", user ? "로그인됨" : "로그인되지 않음");
-      
-      if (user) {
-        console.log("로그인된 사용자 이메일:", user.email);
-      }
-
-      if (!user || user.email !== allowedEmail) {
-        console.log("접근 거부: 로그인되지 않았거나 허용된 이메일이 아님");
-        postForm.style.display = "none";
-        loginSection.style.display = "block";
-        authMessage.innerText = "게시판 글쓰기를 위해 로그인이 필요합니다.";
-        return false;
-      }
-
-      console.log("접근 허용: 로그인된 사용자가 허용된 이메일임");
-      loginSection.style.display = "none";
-      postForm.style.display = "block";
-      authMessage.innerText = "환영합니다, " + user.email;
-      
-      // 수정 모드 확인 및 데이터 로드
-      const editId = getParameterByName('edit');
-      console.log("수정 모드 파라미터 확인:", editId ? "수정 모드" : "신규 작성 모드");
-      
-      if (editId) {
-        console.log("수정 모드 활성화. ID:", editId);
-        await loadPostForEdit(editId);
-      }
-      
-      return true;
+    async function uploadToStorage(file) {
+      const path = `${Date.now()}_${file.name}`;
+      const { error } = await supabase.storage.from('post-files').upload(path, file);
+      if (error) throw error;
+      return supabase.storage.from('post-files').getPublicUrl(path).data.publicUrl;
     }
 
-    // 게시글 수정을 위한 데이터 로드
-    async function loadPostForEdit(postId) {
-      console.log("loadPostForEdit 함수 실행. ID:", postId);
-      try {
-        // 디버깅: API 호출 로그
-        console.log("Supabase 쿼리 실행: posts 테이블에서 ID가", postId, "인 게시글 검색");
-        
-        const { data, error } = await supabaseClient
-          .from('posts')
-          .select('*')
-          .eq('id', postId)
-          .single();
-          
-        if (error) {
-          console.error("Supabase 쿼리 오류:", error);
-          throw error;
-        }
-        
-        // 디버깅: 받아온 데이터 확인
-        console.log("받아온 게시글 데이터:", data);
-        
-        if (!data) throw new Error("게시글을 찾을 수 없습니다.");
-        
-        // 수정 모드 설정
-        isEditMode = true;
-        editPostId = postId;
-        pageTitle.innerText = "글 수정하기";
-        submitButton.innerText = "수정하기";
-        
-        // 폼에 데이터 채우기
-        titleInput.value = data.title || '';
-        contentTextarea.value = data.content || '';
-        console.log("폼 데이터 설정 완료 - 제목:", data.title, "내용 길이:", (data.content || '').length);
-        
-        // 이미지 정보 설정
-        if (data.image_url) {
-          console.log("이미지 URL 발견:", data.image_url);
-          currentImageUrl = data.image_url;
-          displayCurrentImage(data.image_url);
-        }
-        
-        // 파일 정보 설정
-        if (data.file_url) {
-          console.log("파일 URL 발견:", data.file_url);
-          currentFileUrl = data.file_url;
-          currentFileName = data.file_name || extractFilenameFromUrl(data.file_url);
-          displayCurrentFile(currentFileName);
-        }
-        
-        console.log("게시글 데이터 로드 완료");
-        
-      } catch (error) {
-        console.error("게시글 로드 중 오류 발생:", error);
-        alert("게시글을 불러오는데 실패했습니다: " + error.message);
+    async function checkSessionAndLoadForm() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || session.user.email !== allowedEmail) {
+        document.getElementById('login-section').style.display = 'block';
+        return;
       }
+      document.getElementById('postForm').style.display = 'block';
+      if (editId) loadPostForEdit(editId);
     }
-    
-    // URL에서 파일명 추출
-    function extractFilenameFromUrl(url) {
-      const pathParts = url.split('/');
-      const fileNameWithTimestamp = pathParts[pathParts.length - 1];
-      // 타임스탬프 제거 (필요시)
-      const parts = fileNameWithTimestamp.split('_');
-      if (parts.length > 1) {
-        parts.shift(); // 첫 번째 요소(타임스탬프) 제거
-        return parts.join('_');
+
+    async function loadPostForEdit(id) {
+      const { data, error } = await supabase.from('posts').select('*').eq('id', id).single();
+      if (error || !data) return alert('글을 불러오지 못했습니다.');
+
+      document.getElementById('title').value = data.title;
+      document.getElementById('content').value = data.content;
+      if (data.image_url) {
+        const img = document.getElementById('previewImage');
+        img.src = data.image_url;
+        img.style.display = 'block';
       }
-      return fileNameWithTimestamp;
-    }
-    
-    // 현재 이미지 표시
-    function displayCurrentImage(imageUrl) {
-      const container = document.getElementById('current-image-container');
-      const preview = document.getElementById('image-preview');
-      const nameSpan = document.getElementById('current-image-name');
-      
-      // 이미지 파일명 추출
-      const imageName = extractFilenameFromUrl(imageUrl);
-      nameSpan.textContent = imageName;
-      
-      // 이미지 미리보기 설정
-      preview.src = imageUrl;
-      
-      // 컨테이너 표시
-      container.style.display = 'block';
-    }
-    
-    // 현재 파일 표시
-    function displayCurrentFile(fileName) {
-      const container = document.getElementById('current-file-container');
-      const nameSpan = document.getElementById('current-file-name');
-      
-      nameSpan.textContent = fileName;
-      container.style.display = 'block';
-    }
-
-    // 파일 업로드 함수
-    async function uploadFile(file) {
-      const fileName = `${Date.now()}_${file.name}`;
-      const filePath = fileName;
-
-      // 콘솔에 파일 정보 출력 (디버깅용)
-      console.log("업로드 시도:", file.name, file.type, file.size);
-      
-      // 파일 타입에 따른 contentType 설정
-      const options = {
-        contentType: file.type || 'application/octet-stream' // 기본값 설정
-      };
-      
-      try {
-        const { data, error } = await supabaseClient.storage
-          .from('post-files')
-          .upload(filePath, file, options);
-
-        if (error) {
-          console.error("파일 업로드 오류:", error);
-          throw error;
-        }
-
-        const {
-          data: { publicUrl }
-        } = supabaseClient.storage.from('post-files').getPublicUrl(filePath);
-
-        console.log("업로드 성공:", publicUrl);
-        return publicUrl;
-      } catch (error) {
-        console.error("파일 업로드 중 예외 발생:", error);
-        throw error;
+      if (data.file_url) {
+        document.getElementById('fileNameDisplay').textContent = '첨부됨: ' + data.file_name || '파일';
       }
     }
 
-    // 폼 제출 처리
-    postForm.addEventListener('submit', async (e) => {
+    document.getElementById('postForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-
-      const title = titleInput.value.trim();
-      const content = contentTextarea.value.trim();
+      const title = document.getElementById('title').value.trim();
+      const content = document.getElementById('content').value.trim();
       const image = document.getElementById('image').files[0];
       const file = document.getElementById('file').files[0];
 
-      if (!title || !content) {
-        alert("제목과 내용을 입력해주세요.");
-        return;
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session.user;
+
+      let imageUrl = null, fileUrl = null, fileName = null;
+      if (image) imageUrl = await uploadToStorage(image);
+      if (file) {
+        fileUrl = await uploadToStorage(file);
+        fileName = file.name;
       }
 
-      const {
-        data: { session }
-      } = await supabaseClient.auth.getSession();
+      const postData = {
+        title,
+        content,
+        image_url: imageUrl,
+        file_url: fileUrl,
+        file_name: fileName,
+        author_email: user.email
+      };
 
-      const currentUser = session?.user;
-      if (!currentUser || currentUser.email !== allowedEmail) {
-        alert("글쓰기 권한이 없습니다.");
-        return;
+      let result;
+      if (editId) {
+        result = await supabase.from('posts').update(postData).eq('id', editId);
+      } else {
+        result = await supabase.from('posts').insert(postData);
       }
 
-      let statusMessage = isEditMode ? "게시글 수정 중..." : "게시글 등록 중...";
-      authMessage.innerText = statusMessage;
-      let imageUrl = currentImageUrl;
-      let fileUrl = currentFileUrl;
-      let fileName = currentFileName;
-
-      try {
-        // 이미지 처리
-        if (image) {
-          imageUrl = await uploadFile(image);
-        } else if (removeImage) {
-          imageUrl = null;
-        }
-        
-        // 파일 처리
-        if (file) {
-          fileUrl = await uploadFile(file);
-          fileName = file.name;
-        } else if (removeFile) {
-          fileUrl = null;
-          fileName = null;
-        }
-
-        let result;
-        if (isEditMode) {
-          // 게시글 수정
-          result = await supabaseClient
-            .from('posts')
-            .update({
-              title,
-              content,
-              image_url: imageUrl,
-              file_url: fileUrl,
-              file_name: fileName,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', editPostId);
-            
-          if (result.error) throw result.error;
-          alert("글이 성공적으로 수정되었습니다.");
-        } else {
-          // 새 게시글 작성
-          result = await supabaseClient
-            .from('posts')
-            .insert([{
-              title,
-              content,
-              image_url: imageUrl,
-              file_url: fileUrl,
-              file_name: fileName,
-              author_email: currentUser.email
-            }]);
-            
-          if (result.error) throw result.error;
-          alert("글이 성공적으로 등록되었습니다.");
-        }
-        
-        window.location.href = "board.html";
-      } catch (error) {
-        const actionType = isEditMode ? "수정" : "등록";
-        alert(`${actionType} 실패: ${error.message}`);
-        authMessage.innerText = `게시글 ${actionType} 실패: ${error.message}`;
+      if (result.error) {
+        alert("저장 실패: " + result.error.message);
+      } else {
+        alert(editId ? "수정되었습니다." : "등록되었습니다.");
+        location.href = "board.html";
       }
     });
 
-    // 초기화
-    document.addEventListener('DOMContentLoaded', async () => {
-      // 디버깅: URL 파라미터 확인 로그
-      console.log("URL 파라미터 확인:");
-      console.log("edit 파라미터:", getParameterByName('edit'));
-      
-      try {
-        // 수정 모드 파라미터 확인
-        const editId = getParameterByName('edit');
-        if (editId) {
-          console.log("수정 모드 활성화. 게시글 ID:", editId);
-          // 이 로그가 콘솔에 출력되는지 확인하세요
-        }
-        
-        // URL에서 access_token이 있는지 확인 (Magic Link로 돌아온 경우)
-        const accessToken = getParameterByName('access_token');
-        if (accessToken) {
-          authMessage.innerText = "로그인 처리 중...";
-          // 세션 설정
-          const { data, error } = await supabaseClient.auth.setSession({
-            access_token: accessToken,
-            refresh_token: getParameterByName('refresh_token')
-          });
-          
-          if (error) throw error;
-          
-          // 로그인 성공 후 URL 파라미터 제거 (하지만 edit 파라미터는 유지)
-          if (getParameterByName('edit')) {
-            // edit 파라미터가 있으면 그것만 남기고 나머지 제거
-            window.history.replaceState({}, document.title, `${window.location.pathname}?edit=${getParameterByName('edit')}`);
-          } else {
-            // 모든 파라미터 제거
-            window.history.replaceState({}, document.title, window.location.pathname);
-          }
-        }
-      } catch (error) {
-        console.error("세션 설정 오류:", error);
-      }
-      
-      // 사용자 접근 권한 확인
-      await checkUserAccess();
-      
-      // 이미지 삭제 버튼 이벤트 설정
-      document.getElementById('remove-image').addEventListener('click', function() {
-        document.getElementById('current-image-container').style.display = 'none';
-        removeImage = true;
-      });
-      
-      // 파일 삭제 버튼 이벤트 설정
-      document.getElementById('remove-file').addEventListener('click', function() {
-        document.getElementById('current-file-container').style.display = 'none';
-        removeFile = true;
-      });
-    });
-
-    // 로그인 상태 변경 감지
-    supabaseClient.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN') {
-        await checkUserAccess();
-      } else if (event === 'SIGNED_OUT') {
-        loginSection.style.display = "block";
-        postForm.style.display = "none";
-        authMessage.innerText = "게시판 글쓰기를 위해 로그인이 필요합니다.";
-      }
-    });
-    
-    // 링크 추가 버튼 이벤트
-    document.getElementById('link-button').addEventListener('click', function() {
-      document.getElementById('url-input-container').style.display = 'block';
-    });
-    
-    // 링크 취소 버튼 이벤트
-    document.getElementById('cancel-link').addEventListener('click', function() {
-      document.getElementById('url-input-container').style.display = 'none';
-      document.getElementById('url-text').value = '';
-      document.getElementById('url-link').value = '';
-    });
-    
-    // 링크 삽입 버튼 이벤트
-    document.getElementById('insert-link').addEventListener('click', function() {
-      const urlText = document.getElementById('url-text').value.trim();
-      const urlLink = document.getElementById('url-link').value.trim();
-      
-      if (!urlLink) {
-        alert('링크 URL을 입력해주세요.');
-        return;
-      }
-      
-      // 링크 텍스트가 없으면 URL을 텍스트로 사용
-      const displayText = urlText || urlLink;
-      
-      // 마크다운 형식의 링크 생성
-      const markdownLink = `[${displayText}](${urlLink})`;
-      
-      // 현재 커서 위치에 링크 삽입
-      const textarea = document.getElementById('content');
-      const startPos = textarea.selectionStart;
-      const endPos = textarea.selectionEnd;
-      const textBefore = textarea.value.substring(0, startPos);
-      const textAfter = textarea.value.substring(endPos, textarea.value.length);
-      
-      textarea.value = textBefore + markdownLink + textAfter;
-      
-      // 입력 필드 초기화 및 숨기기
-      document.getElementById('url-input-container').style.display = 'none';
-      document.getElementById('url-text').value = '';
-      document.getElementById('url-link').value = '';
-      
-      // 포커스를 텍스트 영역으로 되돌림
-      textarea.focus();
-      textarea.selectionStart = startPos + markdownLink.length;
-      textarea.selectionEnd = startPos + markdownLink.length;
-    });
+    document.addEventListener('DOMContentLoaded', checkSessionAndLoadForm);
   </script>
 </body>
 </html>
