@@ -67,10 +67,33 @@
     .url-buttons button {
       flex: 1;
     }
+    .current-file {
+      background-color: #f8f8f8;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .current-file-name {
+      word-break: break-all;
+    }
+    .file-remove {
+      color: red;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    .image-preview {
+      max-width: 100%;
+      max-height: 200px;
+      margin-top: 10px;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
-  <h1>글쓰기</h1>
+  <h1 id="pageTitle">글쓰기</h1>
   <div id="auth-message"></div>
   <div id="login-section" class="login-container" style="display: none;">
     <p>게시판 글쓰기는 관리자만 가능합니다.</p>
@@ -100,9 +123,26 @@
     <textarea id="content" rows="10" required></textarea>
     
     <label>이미지 업로드: <input type="file" id="image" accept="image/*" /></label>
+    <!-- 현재 이미지 표시 영역 -->
+    <div id="current-image-container" style="display: none;">
+      <div class="current-file">
+        <div class="current-file-name">현재 이미지: <span id="current-image-name"></span></div>
+        <span class="file-remove" id="remove-image">삭제</span>
+      </div>
+      <img id="image-preview" class="image-preview" />
+    </div>
+    
     <label>파일 업로드: <input type="file" id="file" accept="application/x-hwp, application/haansofthwp, application/haansofthwpx, .hwp, .hwpx, application/pdf, .pdf" /></label>
+    <!-- 현재 파일 표시 영역 -->
+    <div id="current-file-container" style="display: none;">
+      <div class="current-file">
+        <div class="current-file-name">현재 파일: <span id="current-file-name"></span></div>
+        <span class="file-remove" id="remove-file">삭제</span>
+      </div>
+    </div>
+    
     <div style="display: flex; gap: 10px; margin-top: 1rem;">
-      <button type="submit" class="button">등록하기</button>
+      <button type="submit" class="button" id="submit-button">등록하기</button>
       <a href="board.html" class="button" style="background-color: #888;">취소</a>
     </div>
   </form>
@@ -118,7 +158,19 @@
     const loginSection = document.getElementById('login-section');
     const loginButton = document.getElementById('login-button');
     const contentTextarea = document.getElementById('content');
+    const titleInput = document.getElementById('title');
+    const submitButton = document.getElementById('submit-button');
+    const pageTitle = document.getElementById('pageTitle');
     const allowedEmail = "salliground@gmail.com";
+    
+    // 수정 모드 관련 변수
+    let isEditMode = false;
+    let editPostId = null;
+    let currentImageUrl = null;
+    let currentFileUrl = null;
+    let currentFileName = null;
+    let removeImage = false;
+    let removeFile = false;
 
     // URL에서 파라미터 추출 함수
     function getParameterByName(name, url = window.location.href) {
@@ -168,7 +220,94 @@
       loginSection.style.display = "none";
       postForm.style.display = "block";
       authMessage.innerText = "환영합니다, " + user.email;
+      
+      // 수정 모드 확인 및 데이터 로드
+      const editId = getParameterByName('edit');
+      if (editId) {
+        await loadPostForEdit(editId);
+      }
+      
       return true;
+    }
+
+    // 게시글 수정을 위한 데이터 로드
+    async function loadPostForEdit(postId) {
+      try {
+        const { data, error } = await supabaseClient
+          .from('posts')
+          .select('*')
+          .eq('id', postId)
+          .single();
+          
+        if (error) throw error;
+        if (!data) throw new Error("게시글을 찾을 수 없습니다.");
+        
+        // 수정 모드 설정
+        isEditMode = true;
+        editPostId = postId;
+        pageTitle.innerText = "글 수정하기";
+        submitButton.innerText = "수정하기";
+        
+        // 폼에 데이터 채우기
+        titleInput.value = data.title || '';
+        contentTextarea.value = data.content || '';
+        
+        // 이미지 정보 설정
+        if (data.image_url) {
+          currentImageUrl = data.image_url;
+          displayCurrentImage(data.image_url);
+        }
+        
+        // 파일 정보 설정
+        if (data.file_url) {
+          currentFileUrl = data.file_url;
+          currentFileName = data.file_name || extractFilenameFromUrl(data.file_url);
+          displayCurrentFile(currentFileName);
+        }
+        
+      } catch (error) {
+        console.error("게시글 로드 중 오류 발생:", error);
+        alert("게시글을 불러오는데 실패했습니다: " + error.message);
+      }
+    }
+    
+    // URL에서 파일명 추출
+    function extractFilenameFromUrl(url) {
+      const pathParts = url.split('/');
+      const fileNameWithTimestamp = pathParts[pathParts.length - 1];
+      // 타임스탬프 제거 (필요시)
+      const parts = fileNameWithTimestamp.split('_');
+      if (parts.length > 1) {
+        parts.shift(); // 첫 번째 요소(타임스탬프) 제거
+        return parts.join('_');
+      }
+      return fileNameWithTimestamp;
+    }
+    
+    // 현재 이미지 표시
+    function displayCurrentImage(imageUrl) {
+      const container = document.getElementById('current-image-container');
+      const preview = document.getElementById('image-preview');
+      const nameSpan = document.getElementById('current-image-name');
+      
+      // 이미지 파일명 추출
+      const imageName = extractFilenameFromUrl(imageUrl);
+      nameSpan.textContent = imageName;
+      
+      // 이미지 미리보기 설정
+      preview.src = imageUrl;
+      
+      // 컨테이너 표시
+      container.style.display = 'block';
+    }
+    
+    // 현재 파일 표시
+    function displayCurrentFile(fileName) {
+      const container = document.getElementById('current-file-container');
+      const nameSpan = document.getElementById('current-file-name');
+      
+      nameSpan.textContent = fileName;
+      container.style.display = 'block';
     }
 
     // 파일 업로드 함수
@@ -210,8 +349,8 @@
     postForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const title = document.getElementById('title').value.trim();
-      const content = document.getElementById('content').value.trim();
+      const title = titleInput.value.trim();
+      const content = contentTextarea.value.trim();
       const image = document.getElementById('image').files[0];
       const file = document.getElementById('file').files[0];
 
@@ -230,36 +369,68 @@
         return;
       }
 
-      authMessage.innerText = "게시글 등록 중...";
-      let imageUrl = null;
-      let fileUrl = null;
-      let fileName = null;
+      let statusMessage = isEditMode ? "게시글 수정 중..." : "게시글 등록 중...";
+      authMessage.innerText = statusMessage;
+      let imageUrl = currentImageUrl;
+      let fileUrl = currentFileUrl;
+      let fileName = currentFileName;
 
       try {
-        if (image) imageUrl = await uploadFile(image);
+        // 이미지 처리
+        if (image) {
+          imageUrl = await uploadFile(image);
+        } else if (removeImage) {
+          imageUrl = null;
+        }
+        
+        // 파일 처리
         if (file) {
           fileUrl = await uploadFile(file);
-          fileName = file.name; // 파일 이름 저장
+          fileName = file.name;
+        } else if (removeFile) {
+          fileUrl = null;
+          fileName = null;
         }
 
-        const { data, error } = await supabaseClient
-          .from('posts')
-          .insert([{
-            title,
-            content,
-            image_url: imageUrl,
-            file_url: fileUrl,
-            file_name: fileName, // 파일 이름 저장
-            author_email: currentUser.email
-          }]);
-
-        if (error) throw error;
+        let result;
+        if (isEditMode) {
+          // 게시글 수정
+          result = await supabaseClient
+            .from('posts')
+            .update({
+              title,
+              content,
+              image_url: imageUrl,
+              file_url: fileUrl,
+              file_name: fileName,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', editPostId);
+            
+          if (result.error) throw result.error;
+          alert("글이 성공적으로 수정되었습니다.");
+        } else {
+          // 새 게시글 작성
+          result = await supabaseClient
+            .from('posts')
+            .insert([{
+              title,
+              content,
+              image_url: imageUrl,
+              file_url: fileUrl,
+              file_name: fileName,
+              author_email: currentUser.email
+            }]);
+            
+          if (result.error) throw result.error;
+          alert("글이 성공적으로 등록되었습니다.");
+        }
         
-        alert("글이 성공적으로 등록되었습니다.");
         window.location.href = "board.html";
       } catch (error) {
-        alert("등록 실패: " + error.message);
-        authMessage.innerText = "게시글 등록 실패: " + error.message;
+        const actionType = isEditMode ? "수정" : "등록";
+        alert(`${actionType} 실패: ${error.message}`);
+        authMessage.innerText = `게시글 ${actionType} 실패: ${error.message}`;
       }
     });
 
@@ -287,6 +458,18 @@
       
       // 사용자 접근 권한 확인
       await checkUserAccess();
+      
+      // 이미지 삭제 버튼 이벤트 설정
+      document.getElementById('remove-image').addEventListener('click', function() {
+        document.getElementById('current-image-container').style.display = 'none';
+        removeImage = true;
+      });
+      
+      // 파일 삭제 버튼 이벤트 설정
+      document.getElementById('remove-file').addEventListener('click', function() {
+        document.getElementById('current-file-container').style.display = 'none';
+        removeFile = true;
+      });
     });
 
     // 로그인 상태 변경 감지
