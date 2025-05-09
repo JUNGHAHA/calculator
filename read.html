@@ -169,9 +169,6 @@
     const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     const postId = new URLSearchParams(location.search).get('id');
-    
-    // 디버깅 로그 추가
-    console.log("게시글 ID:", postId);
 
     function formatDate(dateString) {
       const date = new Date(dateString);
@@ -179,7 +176,6 @@
     }
 
     async function loadPost() {
-      console.log("게시글 로드 시작");
       const { data, error } = await supabase
         .from('posts')
         .select('*')
@@ -187,13 +183,11 @@
         .single();
 
       if (error || !data) {
-        console.error("게시글 로드 실패:", error);
         alert('글을 불러올 수 없습니다.');
         location.href = 'board.html';
         return;
       }
 
-      console.log("로드된 게시글 데이터:", data);
       document.getElementById('postTitle').textContent = data.title;
       document.getElementById('postContent').innerHTML = marked.parse(data.content || ''); // ✅ 링크 포함 렌더링
       
@@ -202,14 +196,12 @@
       }
 
       if (data.image_url) {
-        console.log("이미지 URL 발견:", data.image_url);
         const img = document.getElementById('postImage');
         img.src = data.image_url;
         img.style.display = 'block';
       }
 
       if (data.file_url) {
-        console.log("파일 URL 발견:", data.file_url);
         const fileAttachment = document.getElementById('fileAttachment');
         const fileLink = document.getElementById('fileLink');
         const fileName = document.getElementById('fileName');
@@ -220,8 +212,6 @@
         const extractedName = data.file_url.split('/').pop().split('_').slice(1).join('_');
         fileName.textContent = extractedName || '첨부파일 다운로드';
       }
-      
-      console.log("게시글 로드 완료");
     }
 
     async function deletePost() {
@@ -237,16 +227,11 @@
     }
 
     function editPost() {
-      console.log("수정하기 버튼 클릭됨");
-      console.log("이동할 URL:", `write.html?edit=${postId}`);
       location.href = `write.html?edit=${postId}`;
     }
 
     document.getElementById('deleteBtn').addEventListener('click', deletePost);
     document.getElementById('editBtn').addEventListener('click', editPost);
-    
-    // 전체 보기 확인용 디버깅 로그
-    console.log("DOM이 로드됨, 게시글 로드 시작");
     loadPost();
   </script>
 </body>
