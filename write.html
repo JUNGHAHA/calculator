@@ -204,26 +204,37 @@
 
     // 로그인 상태 확인
     async function checkUserAccess() {
+      console.log("사용자 접근 권한 확인 중...");
       const {
         data: { session }
       } = await supabaseClient.auth.getSession();
 
       const user = session?.user;
+      console.log("현재 로그인 상태:", user ? "로그인됨" : "로그인되지 않음");
+      
+      if (user) {
+        console.log("로그인된 사용자 이메일:", user.email);
+      }
 
       if (!user || user.email !== allowedEmail) {
+        console.log("접근 거부: 로그인되지 않았거나 허용된 이메일이 아님");
         postForm.style.display = "none";
         loginSection.style.display = "block";
         authMessage.innerText = "게시판 글쓰기를 위해 로그인이 필요합니다.";
         return false;
       }
 
+      console.log("접근 허용: 로그인된 사용자가 허용된 이메일임");
       loginSection.style.display = "none";
       postForm.style.display = "block";
       authMessage.innerText = "환영합니다, " + user.email;
       
       // 수정 모드 확인 및 데이터 로드
       const editId = getParameterByName('edit');
+      console.log("수정 모드 파라미터 확인:", editId ? "수정 모드" : "신규 작성 모드");
+      
       if (editId) {
+        console.log("수정 모드 활성화. ID:", editId);
         await loadPostForEdit(editId);
       }
       
@@ -232,14 +243,25 @@
 
     // 게시글 수정을 위한 데이터 로드
     async function loadPostForEdit(postId) {
+      console.log("loadPostForEdit 함수 실행. ID:", postId);
       try {
+        // 디버깅: API 호출 로그
+        console.log("Supabase 쿼리 실행: posts 테이블에서 ID가", postId, "인 게시글 검색");
+        
         const { data, error } = await supabaseClient
           .from('posts')
           .select('*')
           .eq('id', postId)
           .single();
           
-        if (error) throw error;
+        if (error) {
+          console.error("Supabase 쿼리 오류:", error);
+          throw error;
+        }
+        
+        // 디버깅: 받아온 데이터 확인
+        console.log("받아온 게시글 데이터:", data);
+        
         if (!data) throw new Error("게시글을 찾을 수 없습니다.");
         
         // 수정 모드 설정
@@ -251,19 +273,24 @@
         // 폼에 데이터 채우기
         titleInput.value = data.title || '';
         contentTextarea.value = data.content || '';
+        console.log("폼 데이터 설정 완료 - 제목:", data.title, "내용 길이:", (data.content || '').length);
         
         // 이미지 정보 설정
         if (data.image_url) {
+          console.log("이미지 URL 발견:", data.image_url);
           currentImageUrl = data.image_url;
           displayCurrentImage(data.image_url);
         }
         
         // 파일 정보 설정
         if (data.file_url) {
+          console.log("파일 URL 발견:", data.file_url);
           currentFileUrl = data.file_url;
           currentFileName = data.file_name || extractFilenameFromUrl(data.file_url);
           displayCurrentFile(currentFileName);
         }
+        
+        console.log("게시글 데이터 로드 완료");
         
       } catch (error) {
         console.error("게시글 로드 중 오류 발생:", error);
@@ -436,7 +463,18 @@
 
     // 초기화
     document.addEventListener('DOMContentLoaded', async () => {
+      // 디버깅: URL 파라미터 확인 로그
+      console.log("URL 파라미터 확인:");
+      console.log("edit 파라미터:", getParameterByName('edit'));
+      
       try {
+        // 수정 모드 파라미터 확인
+        const editId = getParameterByName('edit');
+        if (editId) {
+          console.log("수정 모드 활성화. 게시글 ID:", editId);
+          // 이 로그가 콘솔에 출력되는지 확인하세요
+        }
+        
         // URL에서 access_token이 있는지 확인 (Magic Link로 돌아온 경우)
         const accessToken = getParameterByName('access_token');
         if (accessToken) {
@@ -449,8 +487,14 @@
           
           if (error) throw error;
           
-          // 로그인 성공 후 URL 파라미터 제거
-          window.history.replaceState({}, document.title, window.location.pathname);
+          // 로그인 성공 후 URL 파라미터 제거 (하지만 edit 파라미터는 유지)
+          if (getParameterByName('edit')) {
+            // edit 파라미터가 있으면 그것만 남기고 나머지 제거
+            window.history.replaceState({}, document.title, `${window.location.pathname}?edit=${getParameterByName('edit')}`);
+          } else {
+            // 모든 파라미터 제거
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
         }
       } catch (error) {
         console.error("세션 설정 오류:", error);
