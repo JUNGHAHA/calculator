@@ -9,7 +9,7 @@
     label { display: block; margin-top: 1rem; }
     input, textarea, button { width: 100%; padding: 0.5rem; margin-top: 0.5rem; }
     #content { min-height: 250px; }
-    .button { 
+    .button {
       display: inline-block;
       padding: 0.5rem 1rem;
       background-color: #4CAF50;
@@ -70,7 +70,7 @@
   </style>
 </head>
 <body>
-  <h1>글쓰기</h1>
+  <h1 id="form-title">글쓰기</h1>
   <div id="auth-message"></div>
   <div id="login-section" class="login-container" style="display: none;">
     <p>게시판 글쓰기는 관리자만 가능합니다.</p>
@@ -81,13 +81,10 @@
   <form id="postForm" style="display: none;">
     <label>제목: <input type="text" id="title" required /></label>
     
-    <!-- 본문 에디터 영역 -->
     <label>내용:</label>
     <div class="editor-buttons">
       <button type="button" class="editor-button" id="link-button">링크 추가</button>
     </div>
-    
-    <!-- 링크 입력 영역 -->
     <div id="url-input-container" class="url-input-container">
       <input type="text" id="url-text" placeholder="링크에 표시될 텍스트" />
       <input type="url" id="url-link" placeholder="https://example.com" />
@@ -96,13 +93,13 @@
         <button type="button" id="cancel-link" class="button" style="background-color: #888;">취소</button>
       </div>
     </div>
-    
     <textarea id="content" rows="10" required></textarea>
     
     <label>이미지 업로드: <input type="file" id="image" accept="image/*" /></label>
-    <label>파일 업로드: <input type="file" id="file" accept="application/x-hwp, application/haansofthwp, application/haansofthwpx, .hwp, .hwpx, application/pdf, .pdf" /></label>
+    <label>파일 업로드: <input type="file" id="file" accept=".pdf,.hwpx,.hwp" /></label>
+    
     <div style="display: flex; gap: 10px; margin-top: 1rem;">
-      <button type="submit" class="button">등록하기</button>
+      <button type="submit" class="button">저장하기</button>
       <a href="board.html" class="button" style="background-color: #888;">취소</a>
     </div>
   </form>
@@ -110,103 +107,55 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const supabaseUrl = 'https://lqkglbaqcnwbhvdjhwka.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxxa2dsYmFxY253Ymh2ZGpod2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MDcxMzgsImV4cCI6MjA2MTM4MzEzOH0.c6Vt3XKENy6pDr2nBhJQz-M9tAQ1RZC3oTfg23ftLfI';
-    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+    const supabaseKey = 'YOUR_SUPABASE_KEY'; // 보안을 위해 실제 키는 서버에 저장
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
+    const allowedEmail = "salliground@gmail.com";
+    const editId = new URLSearchParams(location.search).get('edit');
     const postForm = document.getElementById('postForm');
     const authMessage = document.getElementById('auth-message');
     const loginSection = document.getElementById('login-section');
-    const loginButton = document.getElementById('login-button');
-    const contentTextarea = document.getElementById('content');
-    const allowedEmail = "salliground@gmail.com";
 
-    // URL에서 파라미터 추출 함수
-    function getParameterByName(name, url = window.location.href) {
-      name = name.replace(/[\[\]]/g, '\\$&');
-      var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
-          results = regex.exec(url);
-      if (!results) return null;
-      if (!results[2]) return '';
-      return decodeURIComponent(results[2].replace(/\+/g, ' '));
-    }
-
-    // Magic Link 로그인 설정
-    loginButton.addEventListener('click', async () => {
-      const email = document.getElementById('login-email').value;
-      authMessage.innerText = "로그인 링크 전송 중...";
-      
-      try {
-        const { data, error } = await supabaseClient.auth.signInWithOtp({
-          email: email,
-          options: {
-            emailRedirectTo: 'https://parentscalc.com/write.html'
-          }
-        });
-        
-        if (error) throw error;
-        authMessage.innerText = "이메일로 로그인 링크를 보냈습니다. 메일함을 확인해주세요.";
-      } catch (error) {
-        authMessage.innerText = "로그인 링크 전송 실패: " + error.message;
-      }
-    });
-
-    // 로그인 상태 확인
     async function checkUserAccess() {
-      const {
-        data: { session }
-      } = await supabaseClient.auth.getSession();
-
+      const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
 
       if (!user || user.email !== allowedEmail) {
-        postForm.style.display = "none";
         loginSection.style.display = "block";
-        authMessage.innerText = "게시판 글쓰기를 위해 로그인이 필요합니다.";
-        return false;
+        postForm.style.display = "none";
+        return;
       }
 
       loginSection.style.display = "none";
       postForm.style.display = "block";
-      authMessage.innerText = "환영합니다, " + user.email;
-      return true;
+      if (editId) loadPostData();
     }
 
-    // 파일 업로드 함수
-    async function uploadFile(file) {
+    document.getElementById('login-button').addEventListener('click', async () => {
+      const email = document.getElementById('login-email').value;
+      await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: location.href } });
+      authMessage.innerText = "메일함에서 로그인 링크를 확인해주세요.";
+    });
+
+    async function uploadFile(file, bucket = 'post-files') {
       const fileName = `${Date.now()}_${file.name}`;
-      const filePath = fileName;
-
-      // 콘솔에 파일 정보 출력 (디버깅용)
-      console.log("업로드 시도:", file.name, file.type, file.size);
-      
-      // 파일 타입에 따른 contentType 설정
-      const options = {
-        contentType: file.type || 'application/octet-stream' // 기본값 설정
-      };
-      
-      try {
-        const { data, error } = await supabaseClient.storage
-          .from('post-files')
-          .upload(filePath, file, options);
-
-        if (error) {
-          console.error("파일 업로드 오류:", error);
-          throw error;
-        }
-
-        const {
-          data: { publicUrl }
-        } = supabaseClient.storage.from('post-files').getPublicUrl(filePath);
-
-        console.log("업로드 성공:", publicUrl);
-        return publicUrl;
-      } catch (error) {
-        console.error("파일 업로드 중 예외 발생:", error);
-        throw error;
-      }
+      const { data, error } = await supabase.storage.from(bucket).upload(fileName, file);
+      if (error) throw error;
+      return supabase.storage.from(bucket).getPublicUrl(fileName).data.publicUrl;
     }
 
-    // 폼 제출 처리
+    async function loadPostData() {
+      const { data, error } = await supabase.from('posts').select('*').eq('id', editId).single();
+      if (error) {
+        alert('글을 불러올 수 없습니다.');
+        return;
+      }
+
+      document.getElementById('form-title').textContent = '글 수정하기';
+      document.getElementById('title').value = data.title || '';
+      document.getElementById('content').value = data.content || '';
+    }
+
     postForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -215,137 +164,62 @@
       const image = document.getElementById('image').files[0];
       const file = document.getElementById('file').files[0];
 
-      if (!title || !content) {
-        alert("제목과 내용을 입력해주세요.");
-        return;
-      }
-
-      const {
-        data: { session }
-      } = await supabaseClient.auth.getSession();
-
-      const currentUser = session?.user;
-      if (!currentUser || currentUser.email !== allowedEmail) {
-        alert("글쓰기 권한이 없습니다.");
-        return;
-      }
-
-      authMessage.innerText = "게시글 등록 중...";
       let imageUrl = null;
       let fileUrl = null;
-      let fileName = null;
 
       try {
-        if (image) imageUrl = await uploadFile(image);
-        if (file) {
-          fileUrl = await uploadFile(file);
-          fileName = file.name; // 파일 이름 저장
+        if (image) imageUrl = await uploadFile(image, 'post-images');
+        if (file) fileUrl = await uploadFile(file, 'post-files');
+
+        const data = {
+          title, content,
+          ...(imageUrl && { image_url: imageUrl }),
+          ...(fileUrl && { file_url: fileUrl }),
+        };
+
+        let result;
+        if (editId) {
+          result = await supabase.from('posts').update(data).eq('id', editId);
+        } else {
+          const { data: { session } } = await supabase.auth.getSession();
+          data.author_email = session?.user?.email;
+          result = await supabase.from('posts').insert([data]);
         }
 
-        const { data, error } = await supabaseClient
-          .from('posts')
-          .insert([{
-            title,
-            content,
-            image_url: imageUrl,
-            file_url: fileUrl,
-            file_name: fileName, // 파일 이름 저장
-            author_email: currentUser.email
-          }]);
-
-        if (error) throw error;
-        
-        alert("글이 성공적으로 등록되었습니다.");
+        if (result.error) throw result.error;
+        alert("저장되었습니다.");
         window.location.href = "board.html";
       } catch (error) {
-        alert("등록 실패: " + error.message);
-        authMessage.innerText = "게시글 등록 실패: " + error.message;
+        alert("저장 실패: " + error.message);
       }
     });
 
-    // 초기화
-    document.addEventListener('DOMContentLoaded', async () => {
-      try {
-        // URL에서 access_token이 있는지 확인 (Magic Link로 돌아온 경우)
-        const accessToken = getParameterByName('access_token');
-        if (accessToken) {
-          authMessage.innerText = "로그인 처리 중...";
-          // 세션 설정
-          const { data, error } = await supabaseClient.auth.setSession({
-            access_token: accessToken,
-            refresh_token: getParameterByName('refresh_token')
-          });
-          
-          if (error) throw error;
-          
-          // 로그인 성공 후 URL 파라미터 제거
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
-      } catch (error) {
-        console.error("세션 설정 오류:", error);
-      }
-      
-      // 사용자 접근 권한 확인
-      await checkUserAccess();
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN') checkUserAccess();
     });
 
-    // 로그인 상태 변경 감지
-    supabaseClient.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN') {
-        await checkUserAccess();
-      } else if (event === 'SIGNED_OUT') {
-        loginSection.style.display = "block";
-        postForm.style.display = "none";
-        authMessage.innerText = "게시판 글쓰기를 위해 로그인이 필요합니다.";
-      }
-    });
-    
-    // 링크 추가 버튼 이벤트
-    document.getElementById('link-button').addEventListener('click', function() {
+    document.addEventListener('DOMContentLoaded', checkUserAccess);
+
+    // 링크 삽입 기능
+    document.getElementById('link-button').addEventListener('click', () => {
       document.getElementById('url-input-container').style.display = 'block';
     });
-    
-    // 링크 취소 버튼 이벤트
-    document.getElementById('cancel-link').addEventListener('click', function() {
+    document.getElementById('cancel-link').addEventListener('click', () => {
       document.getElementById('url-input-container').style.display = 'none';
       document.getElementById('url-text').value = '';
       document.getElementById('url-link').value = '';
     });
-    
-    // 링크 삽입 버튼 이벤트
-    document.getElementById('insert-link').addEventListener('click', function() {
+    document.getElementById('insert-link').addEventListener('click', () => {
       const urlText = document.getElementById('url-text').value.trim();
       const urlLink = document.getElementById('url-link').value.trim();
-      
-      if (!urlLink) {
-        alert('링크 URL을 입력해주세요.');
-        return;
-      }
-      
-      // 링크 텍스트가 없으면 URL을 텍스트로 사용
       const displayText = urlText || urlLink;
-      
-      // 마크다운 형식의 링크 생성
       const markdownLink = `[${displayText}](${urlLink})`;
-      
-      // 현재 커서 위치에 링크 삽입
+
       const textarea = document.getElementById('content');
-      const startPos = textarea.selectionStart;
-      const endPos = textarea.selectionEnd;
-      const textBefore = textarea.value.substring(0, startPos);
-      const textAfter = textarea.value.substring(endPos, textarea.value.length);
-      
-      textarea.value = textBefore + markdownLink + textAfter;
-      
-      // 입력 필드 초기화 및 숨기기
-      document.getElementById('url-input-container').style.display = 'none';
-      document.getElementById('url-text').value = '';
-      document.getElementById('url-link').value = '';
-      
-      // 포커스를 텍스트 영역으로 되돌림
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      textarea.value = textarea.value.slice(0, start) + markdownLink + textarea.value.slice(end);
       textarea.focus();
-      textarea.selectionStart = startPos + markdownLink.length;
-      textarea.selectionEnd = startPos + markdownLink.length;
     });
   </script>
 </body>
