@@ -155,9 +155,48 @@
       overflow-wrap: break-word;
       word-break: break-all;
     }
+
+.search-box {
+  position: fixed;
+  top: 60px;
+  right: 10px;
+  z-index: 1001;
+  background-color: white;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  z-index: 9999;
+}
+
+.search-box input {
+  width: 180px;
+  padding: 6px;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  border: 1px solid #aaa;
+}
+
+.hidden {
+  display: none;
+}
+
   </style>
 </head>
 <body>
+
+<!-- 상단 고정 버튼 -->
+<div class="top-buttons">
+  <button class="icon-button" id="searchToggle" title="단어 찾기">
+    🔍
+  </button>
+</div>
+
+<!-- 검색 입력창 -->
+<div id="searchBox" class="search-box hidden">
+  <input type="text" id="searchInput" placeholder="찾을 단어 입력..." onkeyup="highlightText()">
+</div>
+
   <div class="header">
     <h1>엄마표 놀이 게시판</h1>
     <p>자녀와 함께하는 다양한 놀이 아이디어를 공유해보세요!</p>
@@ -165,6 +204,82 @@
   
   <div id="errorInfo" class="error-message" style="display: none;"></div>
   
+<script>
+  // 특수문자 이스케이프 (정규식용)
+  function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  // 검색창 토글
+  document.addEventListener("DOMContentLoaded", function () {
+    const toggle = document.getElementById("searchToggle");
+    const box = document.getElementById("searchBox");
+
+    if (toggle && box) {
+      toggle.addEventListener("click", function () {
+        box.classList.toggle("hidden");
+      });
+    }
+  });
+
+  // 하이라이트 적용
+function highlightText() {
+  const keyword = document.getElementById("searchInput").value.trim();
+  const container = document.querySelector(".menu");
+
+  // 기존 하이라이트 제거
+  const highlights = container.querySelectorAll("span.highlight");
+  highlights.forEach(span => {
+    const parent = span.parentNode;
+    parent.replaceChild(document.createTextNode(span.textContent), span);
+    parent.normalize();
+  });
+
+  if (!keyword) return;
+
+  const safeKeyword = escapeRegExp(keyword);
+  const regex = new RegExp(safeKeyword, "gi");
+
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+
+  const nodesToUpdate = [];
+
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    if (regex.test(node.nodeValue)) {
+      nodesToUpdate.push(node);
+    }
+  }
+
+  nodesToUpdate.forEach(node => {
+    const frag = document.createDocumentFragment();
+    let lastIndex = 0;
+    const matches = [...node.nodeValue.matchAll(regex)];
+
+    matches.forEach(match => {
+      const before = node.nodeValue.slice(lastIndex, match.index);
+      const matchedText = match[0];
+
+      if (before) frag.appendChild(document.createTextNode(before));
+
+      const highlight = document.createElement("span");
+      highlight.className = "highlight";
+      highlight.textContent = matchedText;
+      frag.appendChild(highlight);
+
+      lastIndex = match.index + matchedText.length;
+    });
+
+    const after = node.nodeValue.slice(lastIndex);
+    if (after) frag.appendChild(document.createTextNode(after));
+
+    node.parentNode.replaceChild(frag, node);
+  });
+}
+
+</script>
+
+
 <!-- 광고 단위 예시 (반응형) -->
 <ins class="adsbygoogle"
      style="display:block; text-align:center; margin: 30px 0;"
