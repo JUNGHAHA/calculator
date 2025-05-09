@@ -55,6 +55,7 @@
     }
     .header {
       margin-bottom: 30px;
+      position: relative;
     }
     .post-list {
       max-width: 700px;
@@ -155,141 +156,63 @@
       overflow-wrap: break-word;
       word-break: break-all;
     }
-
-.search-box {
-  position: fixed;
-  top: 60px;
-  right: 10px;
-  z-index: 1001;
-  background-color: white;
-  border: 2px solid #ccc;
-  border-radius: 8px;
-  padding: 8px;
-  display: flex;
-  z-index: 9999;
-}
-
-.search-box input {
-  width: 180px;
-  padding: 6px;
-  font-size: 0.9rem;
-  border-radius: 6px;
-  border: 1px solid #aaa;
-}
-
-.hidden {
-  display: none;
-}
-
+    /* 검색 컨테이너 스타일 */
+    .search-container {
+      position: absolute;
+      top: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      max-width: 300px;
+    }
+    /* 미디어 쿼리로 모바일 대응 */
+    @media (max-width: 768px) {
+      .search-container {
+        position: relative;
+        margin: 10px auto;
+        justify-content: center;
+      }
+    }
+    .search-input {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px 0 0 8px;
+      font-size: 14px;
+      font-family: 'Noto Sans KR', sans-serif;
+      width: 200px;
+    }
+    .search-button {
+      padding: 8px 12px;
+      background: #ffa07a;
+      color: white;
+      border: none;
+      border-radius: 0 8px 8px 0;
+      cursor: pointer;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    .search-button:hover {
+      background: #ff8c61;
+    }
+    .highlighted {
+      background-color: #FFEB3B;
+      padding: 0 2px;
+    }
   </style>
 </head>
 <body>
-
-<!-- 상단 고정 버튼 -->
-<div class="top-buttons">
-  <button class="icon-button" id="searchToggle" title="단어 찾기">
-    🔍
-  </button>
-</div>
-
-<!-- 검색 입력창 -->
-<div id="searchBox" class="search-box hidden">
-  <input type="text" id="searchInput" placeholder="찾을 단어 입력..." onkeyup="highlightText()">
-</div>
-
   <div class="header">
     <h1>엄마표 놀이 게시판</h1>
     <p>자녀와 함께하는 다양한 놀이 아이디어를 공유해보세요!</p>
+    
+    <!-- 검색 기능 추가 -->
+    <div class="search-container">
+      <input type="text" id="searchInput" class="search-input" placeholder="검색어 입력...">
+      <button id="searchButton" class="search-button">🔍 검색</button>
+    </div>
   </div>
   
   <div id="errorInfo" class="error-message" style="display: none;"></div>
   
-<script>
-  // 특수문자 이스케이프 (정규식용)
-  function escapeRegExp(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  }
-
-  // 검색창 토글
-  document.addEventListener("DOMContentLoaded", function () {
-    const toggle = document.getElementById("searchToggle");
-    const box = document.getElementById("searchBox");
-
-    if (toggle && box) {
-      toggle.addEventListener("click", function () {
-        box.classList.toggle("hidden");
-      });
-    }
-  });
-
-  // 하이라이트 적용
-function highlightText() {
-  const keyword = document.getElementById("searchInput").value.trim();
-  const container = document.querySelector(".menu");
-
-  // 기존 하이라이트 제거
-  const highlights = container.querySelectorAll("span.highlight");
-  highlights.forEach(span => {
-    const parent = span.parentNode;
-    parent.replaceChild(document.createTextNode(span.textContent), span);
-    parent.normalize();
-  });
-
-  if (!keyword) return;
-
-  const safeKeyword = escapeRegExp(keyword);
-  const regex = new RegExp(safeKeyword, "gi");
-
-  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
-
-  const nodesToUpdate = [];
-
-  while (walker.nextNode()) {
-    const node = walker.currentNode;
-    if (regex.test(node.nodeValue)) {
-      nodesToUpdate.push(node);
-    }
-  }
-
-  nodesToUpdate.forEach(node => {
-    const frag = document.createDocumentFragment();
-    let lastIndex = 0;
-    const matches = [...node.nodeValue.matchAll(regex)];
-
-    matches.forEach(match => {
-      const before = node.nodeValue.slice(lastIndex, match.index);
-      const matchedText = match[0];
-
-      if (before) frag.appendChild(document.createTextNode(before));
-
-      const highlight = document.createElement("span");
-      highlight.className = "highlight";
-      highlight.textContent = matchedText;
-      frag.appendChild(highlight);
-
-      lastIndex = match.index + matchedText.length;
-    });
-
-    const after = node.nodeValue.slice(lastIndex);
-    if (after) frag.appendChild(document.createTextNode(after));
-
-    node.parentNode.replaceChild(frag, node);
-  });
-}
-
-</script>
-
-
-<!-- 광고 단위 예시 (반응형) -->
-<ins class="adsbygoogle"
-     style="display:block; text-align:center; margin: 30px 0;"
-     data-ad-client="ca-pub-8592494057671071"
-     data-ad-slot="1234567890"
-     data-ad-format="auto"
-     data-full-width-responsive="true"></ins>
-<script>
-     (adsbygoogle = window.adsbygoogle || []).push({});
-</script>
 
   <div id="postList" class="post-list">
     <!-- 게시글이 여기에 로드됩니다 -->
@@ -314,6 +237,9 @@ function highlightText() {
     const errorInfo = document.getElementById('errorInfo');
     const debugInfo = document.getElementById('debugInfo');
     const allowedEmail = 'salliground@gmail.com';
+    
+    // 게시글 데이터를 저장할 변수
+    let allPosts = [];
 
     // 디버그 정보 표시
     function showDebugInfo(message) {
@@ -413,51 +339,94 @@ function highlightText() {
           container.innerHTML = '<div class="empty-list">아직 게시글이 없습니다. 첫 번째 글을 작성해보세요!</div>';
           return;
         }
-
-        data.forEach(post => {
-          const item = document.createElement('a');
-          item.href = `read.html?id=${post.id}`;
-          item.className = 'post-item';
-
-          const img = document.createElement('img');
-          img.src = post.image_url || 'https://via.placeholder.com/80x80?text=No+Image';
-          img.className = 'thumbnail';
-          img.alt = '썸네일';
-          img.onerror = function() {
-            this.src = 'https://via.placeholder.com/80x80?text=No+Image';
-          };
-
-          const infoDiv = document.createElement('div');
-          infoDiv.className = 'post-info';
-
-          const title = document.createElement('div');
-          title.className = 'title';
-          title.textContent = post.title || '제목 없음';
-          
-          if (post.file_url) {
-            const attachIcon = document.createElement('span');
-            attachIcon.className = 'attachment-icon';
-            attachIcon.textContent = ' 📎';
-            title.appendChild(attachIcon);
-          }
-          
-          const dateSpan = document.createElement('div');
-          dateSpan.className = 'date';
-          dateSpan.textContent = formatDate(post.created_at);
-          
-          infoDiv.appendChild(title);
-          infoDiv.appendChild(dateSpan);
-          
-          item.appendChild(img);
-          item.appendChild(infoDiv);
-          container.appendChild(item);
-        });
+        
+        // 모든 게시글 데이터 저장
+        allPosts = data;
+        
+        // 게시글 표시 함수 호출
+        displayPosts(data);
       } catch (err) {
         showErrorInfo("예기치 않은 오류 발생", err.message);
         showDebugInfo(`예외 발생: ${err.message}`);
         const container = document.getElementById('postList');
         container.innerHTML = '<div class="empty-list">게시글을 불러오는데 실패했습니다.</div>';
       }
+    }
+    
+    // 게시글 화면에 표시하는 함수
+    function displayPosts(posts, searchTerm = '') {
+      const container = document.getElementById('postList');
+      container.innerHTML = '';
+      
+      if (!posts || posts.length === 0) {
+        container.innerHTML = '<div class="empty-list">검색 결과가 없습니다.</div>';
+        return;
+      }
+      
+      posts.forEach(post => {
+        const item = document.createElement('a');
+        item.href = `read.html?id=${post.id}`;
+        item.className = 'post-item';
+
+        const img = document.createElement('img');
+        img.src = post.image_url || 'https://via.placeholder.com/80x80?text=No+Image';
+        img.className = 'thumbnail';
+        img.alt = '썸네일';
+        img.onerror = function() {
+          this.src = 'https://via.placeholder.com/80x80?text=No+Image';
+        };
+
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'post-info';
+
+        const title = document.createElement('div');
+        title.className = 'title';
+        
+        // 검색어가 있으면 하이라이트 처리
+        if (searchTerm && post.title) {
+          const regex = new RegExp(`(${searchTerm})`, 'gi');
+          title.innerHTML = post.title.replace(regex, '<span class="highlighted">$1</span>') || '제목 없음';
+        } else {
+          title.textContent = post.title || '제목 없음';
+        }
+        
+        if (post.file_url) {
+          const attachIcon = document.createElement('span');
+          attachIcon.className = 'attachment-icon';
+          attachIcon.textContent = ' 📎';
+          title.appendChild(attachIcon);
+        }
+        
+        const dateSpan = document.createElement('div');
+        dateSpan.className = 'date';
+        dateSpan.textContent = formatDate(post.created_at);
+        
+        infoDiv.appendChild(title);
+        infoDiv.appendChild(dateSpan);
+        
+        item.appendChild(img);
+        item.appendChild(infoDiv);
+        container.appendChild(item);
+      });
+    }
+
+    // 검색 기능
+    function searchPosts() {
+      const searchTerm = document.getElementById('searchInput').value.trim();
+      showDebugInfo(`검색어: "${searchTerm}"`);
+      
+      if (!searchTerm || searchTerm.length === 0) {
+        displayPosts(allPosts);
+        return;
+      }
+      
+      // 제목에서 검색어 찾기
+      const filteredPosts = allPosts.filter(post => 
+        post.title && post.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      
+      showDebugInfo(`검색 결과: ${filteredPosts.length}개 게시글 찾음`);
+      displayPosts(filteredPosts, searchTerm);
     }
 
     function formatDate(dateString) {
@@ -579,6 +548,16 @@ CREATE POLICY "Enable delete for users based on user_id" ON public.posts FOR DEL
       if (isConnected) {
         loadPosts();
         checkLogin();
+        
+        // 검색 버튼 이벤트 리스너 추가
+        document.getElementById('searchButton').addEventListener('click', searchPosts);
+        
+        // 검색 입력창 엔터키 이벤트 리스너 추가
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            searchPosts();
+          }
+        });
       } else {
         // 연결 실패 시 테이블 설정 안내 표시
         showTableSetupGuide();
